@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
+import API from "../axios";
+import { Container, Row, Col, Card, Form, Button, InputGroup } from "react-bootstrap";
 
 const AddProduct = () => {
   const [product, setProduct] = useState({
@@ -13,6 +14,7 @@ const AddProduct = () => {
     productAvailable: false,
   });
   const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -20,8 +22,11 @@ const AddProduct = () => {
   };
 
   const handleImageChange = (e) => {
-    setImage(e.target.files[0]);
-    // setProduct({...product, image: e.target.files[0]})
+    const file = e.target.files[0];
+    setImage(file);
+    if (file) {
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
   const submitHandler = (event) => {
@@ -33,15 +38,20 @@ const AddProduct = () => {
       new Blob([JSON.stringify(product)], { type: "application/json" })
     );
 
-    axios
-      .post("http://localhost:8080/api/product", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
+    API.post("/product", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
       .then((response) => {
-        console.log("Product added successfully:", response.data);
         alert("Product added successfully");
+        // Reset form
+        setProduct({
+          name: "", brand: "", description: "", price: "",
+          category: "", stockQuantity: "", releaseDate: "", productAvailable: false
+        });
+        setImage(null);
+        setImagePreview(null);
       })
       .catch((error) => {
         console.error("Error adding product:", error);
@@ -50,152 +60,178 @@ const AddProduct = () => {
   };
 
   return (
-    <div className="container">
-    <div className="center-container">
-      <form className="row g-3 pt-5" onSubmit={submitHandler}>
-        <div className="col-md-6">
-          <label className="form-label">
-            <h6>Name</h6>
-          </label>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Product Name"
-            onChange={handleInputChange}
-            value={product.name}
-            name="name"
-          />
-        </div>
-        <div className="col-md-6">
-          <label className="form-label">
-            <h6>Brand</h6>
-          </label>
-          <input
-            type="text"
-            name="brand"
-            className="form-control"
-            placeholder="Enter your Brand"
-            value={product.brand}
-            onChange={handleInputChange}
-            id="brand"
-          />
-        </div>
-        <div className="col-12">
-          <label className="form-label">
-            <h6>Description</h6>
-          </label>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Add product description"
-            value={product.description}
-            name="description"
-            onChange={handleInputChange}
-            id="description"
-          />
-        </div>
-        <div className="col-5">
-          <label className="form-label">
-            <h6>Price</h6>
-          </label>
-          <input
-            type="number"
-            className="form-control"
-            placeholder="Eg: $1000"
-            onChange={handleInputChange}
-            value={product.price}
-            name="price"
-            id="price"
-          />
-        </div>
-     
-           <div className="col-md-6">
-          <label className="form-label">
-            <h6>Category</h6>
-          </label>
-          <select
-            className="form-select"
-            value={product.category}
-            onChange={handleInputChange}
-            name="category"
-            id="category"
-          >
-            <option value="">Select category</option>
-            <option value="Laptop">Laptop</option>
-            <option value="Headphone">Headphone</option>
-            <option value="Mobile">Mobile</option>
-            <option value="Electronics">Electronics</option>
-            <option value="Toys">Toys</option>
-            <option value="Fashion">Fashion</option>
-          </select>
-        </div>
+    <div className="add-product-wrapper" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh", paddingTop: "100px", paddingBottom: "50px" }}>
+      <Container>
+        <Row className="justify-content-center">
+          <Col lg={8}>
+            <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
+              <div className="card-header bg-primary text-white p-4 text-center border-0" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
+                <h3 className="fw-bold mb-0">Inventory Enrollment</h3>
+                <p className="small mb-0 opacity-75">Add a new item to your enterprise catalog</p>
+              </div>
+              <Card.Body className="p-4 p-lg-5">
+                <Form onSubmit={submitHandler}>
+                  <Row className="g-4">
+                    <Col md={6}>
+                      <Form.Group controlId="name">
+                        <Form.Label className="fw-bold small text-uppercase text-muted">Product Name</Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="e.g. MacBook Pro M3"
+                          name="name"
+                          value={product.name}
+                          onChange={handleInputChange}
+                          className="py-2 rounded-3 border-light bg-light"
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
 
-        <div className="col-md-4">
-          <label className="form-label">
-            <h6>Stock Quantity</h6>
-          </label>
-          <input
-            type="number"
-            className="form-control"
-            placeholder="Stock Remaining"
-            onChange={handleInputChange}
-            value={product.stockQuantity}
-            name="stockQuantity"
-            // value={`${stockAlert}/${stockQuantity}`}
-            id="stockQuantity"
-          />
-        </div>
-        <div className="col-md-4">
-          <label className="form-label">
-            <h6>Release Date</h6>
-          </label>
-          <input
-            type="date"
-            className="form-control"
-            value={product.releaseDate}
-            name="releaseDate"
-            onChange={handleInputChange}
-            id="releaseDate"
-          />
-        </div>
-        {/* <input className='image-control' type="file" name='file' onChange={(e) => setProduct({...product, image: e.target.files[0]})} />
-    <button className="btn btn-primary" >Add Photo</button>  */}
-        <div className="col-md-4">
-          <label className="form-label">
-            <h6>Image</h6>
-          </label>
-          <input
-            className="form-control"
-            type="file"
-            onChange={handleImageChange}
-          />
-        </div>
-        <div className="col-12">
-          <div className="form-check">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              name="productAvailable"
-              id="gridCheck"
-              checked={product.productAvailable}
-              onChange={(e) =>
-                setProduct({ ...product, productAvailable: e.target.checked })
-              }
-            />
-            <label className="form-check-label">Product Available</label>
-          </div>
-        </div>
-        <div className="col-12">
-          <button
-            type="submit"
-            className="btn btn-primary"
-            // onClick={submitHandler}
-          >
-            Submit
-          </button>
-        </div>
-      </form>
-    </div>
+                    <Col md={6}>
+                      <Form.Group controlId="brand">
+                        <Form.Label className="fw-bold small text-uppercase text-muted">Manufacturer/Brand</Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="e.g. Apple"
+                          name="brand"
+                          value={product.brand}
+                          onChange={handleInputChange}
+                          className="py-2 rounded-3 border-light bg-light"
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
+
+                    <Col xs={12}>
+                      <Form.Group controlId="description">
+                        <Form.Label className="fw-bold small text-uppercase text-muted">Full Description</Form.Label>
+                        <Form.Control
+                          as="textarea"
+                          rows={3}
+                          placeholder="Provide detailed product specifications..."
+                          name="description"
+                          value={product.description}
+                          onChange={handleInputChange}
+                          className="py-2 rounded-3 border-light bg-light"
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={4}>
+                      <Form.Group controlId="price">
+                        <Form.Label className="fw-bold small text-uppercase text-muted">Listing Price</Form.Label>
+                        <InputGroup>
+                          <InputGroup.Text className="bg-light border-light">$</InputGroup.Text>
+                          <Form.Control
+                            type="number"
+                            name="price"
+                            value={product.price}
+                            onChange={handleInputChange}
+                            className="py-2 border-light bg-light"
+                            required
+                          />
+                        </InputGroup>
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={4}>
+                      <Form.Group controlId="category">
+                        <Form.Label className="fw-bold small text-uppercase text-muted">Category</Form.Label>
+                        <Form.Select
+                          name="category"
+                          value={product.category}
+                          onChange={handleInputChange}
+                          className="py-2 rounded-3 border-light bg-light"
+                          required
+                        >
+                          <option value="">Select</option>
+                          <option value="Laptop">Laptop</option>
+                          <option value="Headphone">Headphone</option>
+                          <option value="Mobile">Mobile</option>
+                          <option value="Electronics">Electronics</option>
+                          <option value="Toys">Toys</option>
+                          <option value="Fashion">Fashion</option>
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={4}>
+                      <Form.Group controlId="stockQuantity">
+                        <Form.Label className="fw-bold small text-uppercase text-muted">Stock Level</Form.Label>
+                        <Form.Control
+                          type="number"
+                          name="stockQuantity"
+                          value={product.stockQuantity}
+                          onChange={handleInputChange}
+                          className="py-2 rounded-3 border-light bg-light"
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={6}>
+                      <Form.Group controlId="releaseDate">
+                        <Form.Label className="fw-bold small text-uppercase text-muted">Release Date</Form.Label>
+                        <Form.Control
+                          type="date"
+                          name="releaseDate"
+                          value={product.releaseDate}
+                          onChange={handleInputChange}
+                          className="py-2 rounded-3 border-light bg-light"
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={6}>
+                      <Form.Group controlId="image">
+                        <Form.Label className="fw-bold small text-uppercase text-muted">Product Image</Form.Label>
+                        <Form.Control
+                          type="file"
+                          onChange={handleImageChange}
+                          className="py-2 rounded-3 border-light bg-light"
+                          required={!imagePreview}
+                        />
+                      </Form.Group>
+                    </Col>
+
+                    {imagePreview && (
+                      <Col xs={12} className="text-center">
+                        <div className="p-3 border rounded-4 bg-light d-inline-block">
+                          <img src={imagePreview} alt="Preview" style={{ maxHeight: "150px" }} className="rounded-3 shadow-sm" />
+                          <p className="small text-muted mt-2 mb-0">Image Preview</p>
+                        </div>
+                      </Col>
+                    )}
+
+                    <Col xs={12}>
+                      <Form.Check 
+                        type="switch"
+                        id="productAvailable"
+                        label="Publish to storefront immediately"
+                        checked={product.productAvailable}
+                        onChange={(e) => setProduct({ ...product, productAvailable: e.target.checked })}
+                        className="fw-bold text-muted"
+                      />
+                    </Col>
+
+                    <Col xs={12} className="pt-3">
+                      <Button 
+                        type="submit" 
+                        className="w-100 py-3 rounded-pill fw-bold shadow-sm"
+                        style={{ background: "#764ba2", border: "none" }}
+                      >
+                        Finalize & Upload Product
+                      </Button>
+                    </Col>
+                  </Row>
+                </Form>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
     </div>
   );
 };

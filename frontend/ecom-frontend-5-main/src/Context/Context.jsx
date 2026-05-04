@@ -1,4 +1,4 @@
-import axios from "../axios";
+import API from "../axios";
 import { useState, useEffect, createContext } from "react";
 
 const AppContext = createContext({
@@ -36,22 +36,41 @@ export const AppProvider = ({ children }) => {
   };
 
   const removeFromCart = (productId) => {
-    console.log("productID",productId)
     const updatedCart = cart.filter((item) => item.id !== productId);
     setCart(updatedCart);
     localStorage.setItem('cart', JSON.stringify(updatedCart));
-    console.log("CART",cart)
   };
 
-  const refreshData = async () => {
-    try {
-      const response = await axios.get("/products");
-      setData(response.data);
-    } catch (error) {
-      setIsError(error.message);
+const refreshData = async () => {
+  try {
+    const response = await API.get("/products");
+    setData(response.data);
+    setIsError(false);
+  } catch (error) {
+    console.error("Fetch error:", error);
+    setIsError(true);
+    setData([]); 
+  }
+};
+
+// Context/Context.jsx
+
+const deleteProduct = async (id) => {
+  try {
+    // Use the custom 'API' instance to send the token automatically
+    await API.delete(`/product/${id}`);
+    
+    // Update the state so the product disappears from the Admin screen
+    setData(prevData => prevData.filter(product => product.id !== id));
+    
+    alert("Product deleted successfully");
+  } catch (error) {
+    console.error("Delete error:", error);
+    if (error.response?.status === 403) {
+        alert("Access Denied: Your account does not have Admin privileges.");
     }
-  };
-
+  }
+};
   const clearCart =() =>{
     setCart([]);
   }
@@ -64,8 +83,21 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
   
+  // ... existing code ...
+
   return (
-    <AppContext.Provider value={{ data, isError, cart, addToCart, removeFromCart,refreshData, clearCart  }}>
+    <AppContext.Provider 
+      value={{ 
+        data, 
+        isError, 
+        cart, 
+        addToCart, 
+        removeFromCart, 
+        refreshData, 
+        clearCart,
+        deleteProduct 
+      }}
+    >
       {children}
     </AppContext.Provider>
   );

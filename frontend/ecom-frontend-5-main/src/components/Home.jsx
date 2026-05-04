@@ -1,183 +1,143 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import API from "../axios";
 import AppContext from "../Context/Context";
-import unplugged from "../assets/unplugged.png"
+import unplugged from "../assets/unplugged.png";
 
 const Home = ({ selectedCategory }) => {
   const { data, isError, addToCart, refreshData } = useContext(AppContext);
   const [products, setProducts] = useState([]);
-  const [isDataFetched, setIsDataFetched] = useState(false);
 
   useEffect(() => {
-    if (!isDataFetched) {
-      refreshData();
-      setIsDataFetched(true);
+    refreshData();
+  }, []);
+
+  const addToWishlist = async (productId) => {
+    try {
+      const response = await API.post(`/wishlist/add/${productId}`);
+      if (response.status === 200 || response.status === 201) {
+        alert("Added to Wishlist!");
+      }
+    } catch (err) {
+      console.error("Wishlist POST Error:", err.response);
+      alert("Please log in to use the Wishlist.");
     }
-  }, [refreshData, isDataFetched]);
+  };
 
   useEffect(() => {
     if (data && data.length > 0) {
-      const fetchImagesAndUpdateProducts = async () => {
-        const updatedProducts = await Promise.all(
-          data.map(async (product) => {
-            try {
-              const response = await axios.get(
-                `http://localhost:8080/api/product/${product.id}/image`,
-                { responseType: "blob" }
-              );
-              const imageUrl = URL.createObjectURL(response.data);
-              return { ...product, imageUrl };
-            } catch (error) {
-              console.error(
-                "Error fetching image for product ID:",
-                product.id,
-                error
-              );
-              return { ...product, imageUrl: "placeholder-image-url" };
-            }
-          })
-        );
-        setProducts(updatedProducts);
-      };
-
-      fetchImagesAndUpdateProducts();
+      const processedProducts = data.map(product => ({
+        ...product,
+        imageUrl: product.imageData 
+          ? `data:${product.imageType};base64,${product.imageData}` 
+          : unplugged
+      }));
+      setProducts(processedProducts);
     }
   }, [data]);
 
   const filteredProducts = selectedCategory
-    ? products.filter((product) => product.category === selectedCategory)
+    ? products.filter((p) => p.category === selectedCategory)
     : products;
 
-  if (isError) {
-    return (
-      <h2 className="text-center" style={{ padding: "18rem" }}>
-      <img src={unplugged} alt="Error" style={{ width: '100px', height: '100px' }}/>
-      </h2>
-    );
-  }
+  if (isError) return (
+    <div className="container text-center mt-5 pt-5">
+      <img src={unplugged} alt="Error" width="150" className="mb-3 opacity-50"/>
+      <h3 className="text-muted">Something went wrong while fetching products.</h3>
+    </div>
+  );
+
   return (
-    <>
-      <div
-        className="grid"
-        style={{
-          marginTop: "64px",
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "30px",
-          padding: "30px",
-          maxWidth: "1200px",
-          margin: "64px auto 0",
-        }}
-      >
-        {filteredProducts.length === 0 ? (
-          <h2
-            className="text-center"
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            No Products Available
-          </h2>
-        ) : (
-          filteredProducts.map((product) => {
-            const { id, brand, name, price, productAvailable, imageUrl } =
-              product;
-            const cardStyle = {
-              width: "18rem",
-              height: "12rem",
-              boxShadow: "rgba(0, 0, 0, 0.24) 0px 2px 3px",
-              backgroundColor: productAvailable ? "#fff" : "#ccc",
-            };
-            return (
-              <div
-                className="card mb-3"
-                style={{
-                  width: "100%",
-                  height: "360px",
-                  boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                  borderRadius: "15px",
-                  overflow: "hidden", 
-                  backgroundColor: productAvailable ? "#fff" : "#ccc",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent:'flex-start',
-                  alignItems:'stretch',
-                  transition: "transform 0.3s ease, box-shadow 0.3s ease"
-                }}
-                key={id}
-              >
-                <Link
-                  to={`/product/${id}`}
-                  style={{ textDecoration: "none", color: "inherit" }}
-                >
-                  <img
-                    src={imageUrl}
-                    alt={name}
-                    style={{
-                      width: "100%",
-                      height: "150px", 
-                      objectFit: "cover",  
-                      padding: "5px",
-                      margin: "0",
-                      borderRadius: "15px 15px 0 0", 
+    <div className="home-wrapper" style={{ backgroundColor: "#fbfbff", minHeight: "100vh" }}>
+      {/* 1. Hero Section */}
+      {!selectedCategory && (
+        <div className="hero-section py-5 mb-5" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", color: "white" }}>
+          <div className="container py-4 text-center">
+            <h1 className="display-4 fw-bold mb-3">Upgrade Your Lifestyle</h1>
+            <p className="lead mb-4 opacity-75">Discover premium tech and essentials at the best prices.</p>
+            <button className="btn btn-outline-light btn-lg rounded-pill px-5">Shop New Arrivals</button>
+          </div>
+        </div>
+      )}
+
+      <div className="container pt-3">
+        {/* 2. Header Info */}
+        <div className="d-flex justify-content-between align-items-end mb-4">
+          <div>
+            <h2 className="fw-bold mb-0">{selectedCategory ? selectedCategory : "Featured Products"}</h2>
+            <p className="text-muted mb-0">{filteredProducts.length} items found</p>
+          </div>
+        </div>
+
+        {/* 3. Product Grid */}
+        <div className="row">
+          {filteredProducts.length === 0 ? (
+            <div className="col-12 text-center py-5">
+              <h2 className="text-muted">No Products found in this category.</h2>
+            </div>
+          ) : (
+            filteredProducts.map((product) => (
+              <div className="col-sm-6 col-md-4 col-lg-3 mb-4" key={product.id}>
+                <div className="card h-100 border-0 shadow-sm custom-product-card" style={{ borderRadius: "20px", transition: "transform 0.3s ease" }}>
+                  
+                  {/* Wishlist Button */}
+                  <button 
+                    className="wishlist-btn"
+                    style={{ 
+                      position: "absolute", top: "15px", right: "15px", zIndex: 5,
+                      background: "rgba(255,255,255,0.9)", border: "none",
+                      borderRadius: "50%", padding: "8px", boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
                     }}
-                  />
-                  <div
-                    className="card-body"
-                    style={{
-                      flexGrow: 1,
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                      padding: "10px",
+                    onClick={(e) => {
+                      e.preventDefault();
+                      addToWishlist(product.id);
                     }}
                   >
-                    <div>
-                      <h5
-                        className="card-title"
-                        style={{ margin: "0 0 10px 0", fontSize: "1.2rem" }}
-                      >
-                        {name.toUpperCase()}
-                      </h5>
-                      <i
-                        className="card-brand"
-                        style={{ fontStyle: "italic", fontSize: "0.8rem" }}
-                      >
-                        {"~ " + brand}
-                      </i>
+                    <i className="bi bi-heart-fill text-danger"></i>
+                  </button>
+
+                  <Link to={`/product/${product.id}`} className="text-decoration-none text-dark h-100 d-flex flex-column">
+                    <div className="image-container p-3" style={{ height: "220px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <img 
+                        src={product.imageUrl} 
+                        alt={product.name} 
+                        className="img-fluid"
+                        style={{ maxHeight: "100%", transition: "0.3s ease" }}
+                      />
                     </div>
-                    <hr className="hr-line" style={{ margin: "10px 0" }} />
-                    <div className="home-cart-price">
-                      <h5
-                        className="card-text"
-                        style={{ fontWeight: "600", fontSize: "1.1rem",marginBottom:'5px' }}
-                      >
-                        <i class="bi bi-currency-dollar"></i>
-                        {price}
-                      </h5>
+                    
+                    <div className="card-body pt-0 d-flex flex-column">
+                      <div className="mb-2">
+                        <span className="badge bg-light text-primary mb-1" style={{ fontSize: "0.7rem" }}>{product.category}</span>
+                        <h6 className="card-title fw-bold mb-0 text-truncate" title={product.name}>
+                          {product.name?.toUpperCase()}
+                        </h6>
+                        <small className="text-muted">{product.brand}</small>
+                      </div>
+                      
+                      <div className="mt-auto pt-3 border-top d-flex align-items-center justify-content-between">
+                        <h5 className="mb-0 fw-bold" style={{ color: "#764ba2" }}>${product.price}</h5>
+                        <button 
+                          className="btn rounded-pill p-2 px-3"
+                          style={{ backgroundColor: "#764ba2", color: "white", border: "none", fontSize: "0.85rem" }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            addToCart(product);
+                            alert(`${product.name} added to cart!`); // Popup added here
+                          }}
+                        >
+                          <i className="bi bi-cart-plus me-1"></i> Add
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      className="btn-hover color-9"
-                      style={{margin:'10px 25px 0px '  }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        addToCart(product);
-                      }}
-                      disabled={!productAvailable}
-                    >
-                      {productAvailable ? "Add to Cart" : "Out of Stock"}
-                    </button> 
-                  </div>
-                </Link>
+                  </Link>
+                </div>
               </div>
-            );
-          })
-        )}
+            ))
+          )}
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 
