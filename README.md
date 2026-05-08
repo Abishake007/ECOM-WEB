@@ -109,34 +109,46 @@ Frontend runs on `http://localhost:5173`
 
 ## API Endpoints
 
-**Authentication**
-- `POST /api/auth/signup` - Register new user
-- `POST /api/auth/signin` - User login
+### Authentication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/signup` | Register new user |
+| POST | `/api/auth/signin` | User login |
 
-**Products**
-- `GET /api/products` - Get all products
-- `GET /api/product/{id}` - Get product details
-- `GET /api/product/{productId}/image` - Get product image
-- `GET /api/products/search?keyword={value}` - Search products
-- `POST /api/product` - Add product (Auth required)
-- `PUT /api/product/{id}` - Update product (Auth required)
-- `DELETE /api/product/{id}` - Delete product (Admin only)
+### Products
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/products` | Get all products |
+| GET | `/api/product/{id}` | Get product details |
+| GET | `/api/product/{productId}/image` | Get product image |
+| GET | `/api/products/search?keyword={value}` | Search products |
+| POST | `/api/product` | Add product (Auth required) |
+| PUT | `/api/product/{id}` | Update product (Auth required) |
+| DELETE | `/api/product/{id}` | Delete product (Admin only) |
 
-**Wishlist**
-- `POST /api/wishlist/add/{productId}` - Add to wishlist
-- `GET /api/wishlist` - Get user's wishlist
-- `DELETE /api/wishlist/remove/{productId}` - Remove from wishlist
+### Wishlist
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/wishlist/add/{productId}` | Add to wishlist |
+| GET | `/api/wishlist` | Get user's wishlist |
+| DELETE | `/api/wishlist/remove/{productId}` | Remove from wishlist |
 
-**Orders**
-- `POST /api/orders` - Create order (Auth required)
-- `GET /api/orders/user` - Get user's orders
-- `GET /api/admin/orders` - Get all orders (Admin only)
+### Orders
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/orders` | Create order (Auth required) |
+| GET | `/api/orders/user` | Get user's orders |
+| GET | `/api/admin/orders` | Get all orders (Admin only) |
 
-**Payment**
-- `POST /api/payment/create-payment-intent` - Create Stripe payment intent
+### Payment
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/payment/create-payment-intent` | Create Stripe payment intent |
 
-**Admin**
-- `GET /api/admin/users` - List all users (Admin only)
+### Admin
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/admin/users` | List all users (Admin only) |
 
 ## Authentication
 
