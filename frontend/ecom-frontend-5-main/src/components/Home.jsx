@@ -1,142 +1,160 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import API from "../axios";
 import AppContext from "../Context/Context";
 import unplugged from "../assets/unplugged.png";
+import API from "../axios";
 
 const Home = ({ selectedCategory }) => {
-  const { data, isError, addToCart, refreshData } = useContext(AppContext);
+  const { data, addToCart, refreshData } = useContext(AppContext);
   const [products, setProducts] = useState([]);
 
-  useEffect(() => {
-    refreshData();
-  }, []);
+  useEffect(() => { refreshData(); }, []);
 
   const addToWishlist = async (productId) => {
     try {
-      const response = await API.post(`/wishlist/add/${productId}`);
-      if (response.status === 200 || response.status === 201) {
-        alert("Added to Wishlist!");
-      }
-    } catch (err) {
-      console.error("Wishlist POST Error:", err.response);
-      alert("Please log in to use the Wishlist.");
-    }
+      await API.post(`/wishlist/add/${productId}`);
+      alert("Added to Wishlist!");
+    } catch (err) { alert("Please log in to save items."); }
   };
 
   useEffect(() => {
     if (data && data.length > 0) {
-      const processedProducts = data.map(product => ({
-        ...product,
-        imageUrl: product.imageData 
-          ? `data:${product.imageType};base64,${product.imageData}` 
-          : unplugged
-      }));
-      setProducts(processedProducts);
+      setProducts(data.map(p => ({
+        ...p,
+        imageUrl: p.imageData ? `data:${p.imageType};base64,${p.imageData}` : unplugged
+      })));
     }
   }, [data]);
 
-  const filteredProducts = selectedCategory
-    ? products.filter((p) => p.category === selectedCategory)
-    : products;
-
-  if (isError) return (
-    <div className="container text-center mt-5 pt-5">
-      <img src={unplugged} alt="Error" width="150" className="mb-3 opacity-50"/>
-      <h3 className="text-muted">Something went wrong while fetching products.</h3>
-    </div>
-  );
+  const filteredProducts = selectedCategory ? products.filter(p => p.category === selectedCategory) : products;
 
   return (
-    <div className="home-wrapper" style={{ backgroundColor: "#fbfbff", minHeight: "100vh" }}>
-      {/* 1. Hero Section */}
+    <div className="home-wrapper" style={{ backgroundColor: "#eaeded", minHeight: "100vh", paddingBottom: "50px" }}>
+      
+      {/* 1. Modern Hero Banner - Responsive Height & Gradient Fade */}
       {!selectedCategory && (
-        <div className="hero-section py-5 mb-5" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", color: "white" }}>
-          <div className="container py-4 text-center">
-            <h1 className="display-4 fw-bold mb-3">Upgrade Your Lifestyle</h1>
-            <p className="lead mb-4 opacity-75">Discover premium tech and essentials at the best prices.</p>
-            <button className="btn btn-outline-light btn-lg rounded-pill px-5">Shop New Arrivals</button>
-          </div>
+        <div className="hero-banner w-100 position-relative" style={{ overflow: "hidden" }}>
+          <img 
+            src="/banner.png" 
+            className="w-100 d-block" 
+            style={{ 
+              minHeight: "220px",
+              maxHeight: "450px",
+              objectFit: "cover",
+              objectPosition: "center",
+              maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%)",
+              WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%)"
+            }} 
+            alt="Black Friday Promotion" 
+          />
         </div>
       )}
 
-      <div className="container pt-3">
-        {/* 2. Header Info */}
-        <div className="d-flex justify-content-between align-items-end mb-4">
-          <div>
-            <h2 className="fw-bold mb-0">{selectedCategory ? selectedCategory : "Featured Products"}</h2>
-            <p className="text-muted mb-0">{filteredProducts.length} items found</p>
-          </div>
-        </div>
-
-        {/* 3. Product Grid */}
-        <div className="row">
-          {filteredProducts.length === 0 ? (
-            <div className="col-12 text-center py-5">
-              <h2 className="text-muted">No Products found in this category.</h2>
-            </div>
-          ) : (
+      {/* 2. Overlapping Product Grid */}
+      <div 
+        className="container-fluid px-lg-5" 
+        style={{ 
+          marginTop: selectedCategory ? "120px" : "-12vw", // Dynamic overlap based on screen width
+          position: "relative", 
+          zIndex: 2 
+        }}
+      >
+        <div className="row g-3">
+          {filteredProducts.length > 0 ? (
             filteredProducts.map((product) => (
-              <div className="col-sm-6 col-md-4 col-lg-3 mb-4" key={product.id}>
-                <div className="card h-100 border-0 shadow-sm custom-product-card" style={{ borderRadius: "20px", transition: "transform 0.3s ease" }}>
-                  
-                  {/* Wishlist Button */}
-                  <button 
-                    className="wishlist-btn"
-                    style={{ 
-                      position: "absolute", top: "15px", right: "15px", zIndex: 5,
-                      background: "rgba(255,255,255,0.9)", border: "none",
-                      borderRadius: "50%", padding: "8px", boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      addToWishlist(product.id);
-                    }}
-                  >
-                    <i className="bi bi-heart-fill text-danger"></i>
-                  </button>
-
+              <div className="col-6 col-md-4 col-lg-3 col-xl-2 mb-2" key={product.id}>
+                {/* Modern Card Design */}
+                <div className="product-card h-100 bg-white p-3 border-0 transition-all shadow-hover">
                   <Link to={`/product/${product.id}`} className="text-decoration-none text-dark h-100 d-flex flex-column">
-                    <div className="image-container p-3" style={{ height: "220px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    
+                    {/* Category Tag */}
+                    <span className="text-muted text-uppercase mb-1" style={{ fontSize: '10px', letterSpacing: '1px' }}>
+                      {product.category}
+                    </span>
+                    
+                    <h6 className="fw-bold mb-3 text-truncate" style={{ fontSize: '14px' }}>
+                      {product.name}
+                    </h6>
+                    
+                    {/* Image Stage */}
+                    <div className="image-stage mb-3 d-flex align-items-center justify-content-center" style={{ height: "160px" }}>
                       <img 
                         src={product.imageUrl} 
-                        alt={product.name} 
-                        className="img-fluid"
-                        style={{ maxHeight: "100%", transition: "0.3s ease" }}
+                        className="img-fluid" 
+                        style={{ maxHeight: "100%", transition: "transform 0.3s ease" }} 
+                        alt={product.name}
                       />
                     </div>
-                    
-                    <div className="card-body pt-0 d-flex flex-column">
-                      <div className="mb-2">
-                        <span className="badge bg-light text-primary mb-1" style={{ fontSize: "0.7rem" }}>{product.category}</span>
-                        <h6 className="card-title fw-bold mb-0 text-truncate" title={product.name}>
-                          {product.name?.toUpperCase()}
-                        </h6>
-                        <small className="text-muted">{product.brand}</small>
+
+                    {/* Price & Action Footer */}
+                    <div className="mt-auto pt-3 border-top">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <div className="d-flex flex-column">
+                          <h5 className="fw-bold mb-0 text-dark">₹{product.price}</h5>
+                          <span className="text-muted" style={{ fontSize: '10px', textDecoration: 'line-through' }}>
+                            ₹{Math.floor(product.price * 1.2)}
+                          </span>
+                        </div>
+                        
+                        <div className="d-flex gap-1">
+                          <button 
+                            className="btn btn-sm btn-outline-secondary border-0 p-1" 
+                            onClick={(e) => { e.preventDefault(); addToWishlist(product.id); }}
+                          >
+                            <i className="bi bi-heart"></i>
+                          </button>
+                          <button 
+                            className="btn btn-sm btn-warning fw-bold px-3 shadow-sm rounded-1"
+                            onClick={(e) => { e.preventDefault(); addToCart(product); }}
+                            style={{ fontSize: '12px' }}
+                          >
+                            ADD
+                          </button>
+                        </div>
                       </div>
                       
-                      <div className="mt-auto pt-3 border-top d-flex align-items-center justify-content-between">
-                        <h5 className="mb-0 fw-bold" style={{ color: "#764ba2" }}>${product.price}</h5>
-                        <button 
-                          className="btn rounded-pill p-2 px-3"
-                          style={{ backgroundColor: "#764ba2", color: "white", border: "none", fontSize: "0.85rem" }}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            addToCart(product);
-                            alert(`${product.name} added to cart!`); // Popup added here
-                          }}
-                        >
-                          <i className="bi bi-cart-plus me-1"></i> Add
-                        </button>
+                      <div className="d-flex align-items-center gap-1">
+                        <i className="bi bi-truck text-primary" style={{ fontSize: '12px' }}></i>
+                        <small className="text-primary fw-bold" style={{ fontSize: '10px' }}>
+                          FREE Delivery Tomorrow
+                        </small>
                       </div>
                     </div>
                   </Link>
                 </div>
               </div>
             ))
+          ) : (
+            <div className="col-12 text-center py-5 bg-white shadow-sm rounded-1">
+              <i className="bi bi-box-seam display-1 text-light"></i>
+              <h4 className="text-muted mt-3">We couldn't find any products in this section.</h4>
+              <button className="btn btn-warning mt-2" onClick={() => window.location.reload()}>Browse All</button>
+            </div>
           )}
         </div>
       </div>
+
+      {/* 3. Global CSS for Hover Animations */}
+      <style>{`
+        .product-card {
+          border-radius: 4px;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .product-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.12) !important;
+        }
+        .product-card:hover img {
+          transform: scale(1.05);
+        }
+        .image-stage {
+          background-color: #f8f9fa;
+          border-radius: 4px;
+        }
+        .home-wrapper {
+          overflow-x: hidden;
+        }
+      `}</style>
     </div>
   );
 };

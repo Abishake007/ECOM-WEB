@@ -8,7 +8,7 @@ const UserOrders = () => {
 
   useEffect(() => {
     // Fetch orders for the logged-in user using the JWT token in headers
-    axios.get('/api/user/orders')
+    axios.get('/user/orders')
       .then(res => {
         setOrders(res.data);
         setLoading(false);

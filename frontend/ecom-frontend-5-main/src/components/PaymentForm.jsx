@@ -15,7 +15,6 @@ const PaymentForm = ({ totalPrice, onPaymentSuccess }) => {
 
     setIsProcessing(true);
 
-    // Confirm payment and include shipping details collected by AddressElement
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       redirect: 'if_required',
@@ -25,27 +24,83 @@ const PaymentForm = ({ totalPrice, onPaymentSuccess }) => {
       setErrorMessage(error.message);
       setIsProcessing(false);
     } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-      // Logic for backend to trigger EmailService confirmation
       onPaymentSuccess();
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h6 className="mb-3">Shipping Information</h6>
-      {/* mode="shipping" collects address and phone number */}
-      <AddressElement options={{ mode: 'shipping', allowedCountries: ['IN', 'US'] }} />
-      
-      <h6 className="mt-4 mb-3">Payment Details</h6>
-      <PaymentElement />
-      
-      {errorMessage && <div className="text-danger mt-2">{errorMessage}</div>}
-      
-      <div className="d-grid gap-2 mt-4">
-        <Button variant="primary" type="submit" disabled={isProcessing || !stripe || !elements}>
-          {isProcessing ? <Spinner animation="border" size="sm" /> : `Pay $${totalPrice}`}
-        </Button>
+    <form onSubmit={handleSubmit} className="p-1">
+      <div className="mb-4">
+        <h6 className="Oswald-font fw-black text-uppercase mb-3" style={{ letterSpacing: '1px' }}>
+          01. Shipping Information
+        </h6>
+        <div className="border border-dark p-3 bg-white">
+          <AddressElement options={{ 
+            mode: 'shipping', 
+            allowedCountries: ['IN', 'US'],
+            appearance: {
+                theme: 'none',
+                variables: { fontFamily: 'Oswald, sans-serif', borderRadius: '0px' }
+            }
+          }} />
+        </div>
       </div>
+      
+      <div className="mb-4">
+        <h6 className="Oswald-font fw-black text-uppercase mb-3" style={{ letterSpacing: '1px' }}>
+          02. Payment Details
+        </h6>
+        <div className="border border-dark p-3 bg-white">
+          <PaymentElement options={{
+            appearance: {
+                theme: 'none',
+                variables: { fontFamily: 'Oswald, sans-serif', borderRadius: '0px' }
+            }
+          }} />
+        </div>
+      </div>
+      
+      {errorMessage && (
+        <div className="Oswald-font fw-bold text-danger small text-uppercase mb-3" style={{ letterSpacing: '0.5px' }}>
+          <i className="bi bi-exclamation-triangle-fill me-2"></i>
+          {errorMessage}
+        </div>
+      )}
+      
+      <div className="mt-5">
+        <Button 
+          variant="dark" 
+          type="submit" 
+          disabled={isProcessing || !stripe || !elements}
+          className="w-100 py-3 rounded-0 Oswald-font fw-black text-uppercase shadow-none border-0 d-flex justify-content-between align-items-center px-4"
+          style={{ letterSpacing: '2px', fontSize: '1.1rem' }}
+        >
+          {isProcessing ? (
+            <>
+              <span>Processing</span>
+              <Spinner animation="border" size="sm" variant="light" />
+            </>
+          ) : (
+            <>
+              <span>Authorize Payment</span>
+              <span>₹{totalPrice}</span>
+            </>
+          )}
+        </Button>
+        <p className="text-center text-muted small mt-3 Oswald-font fw-bold text-uppercase" style={{ fontSize: '10px' }}>
+          Secure Encrypted Transaction <i className="bi bi-lock-fill ms-1"></i>
+        </p>
+      </div>
+
+      <style>{`
+        .fw-black { font-weight: 900 !important; }
+        .Oswald-font { font-family: 'Oswald', sans-serif; }
+        
+        /* Customizing Stripe Elements to match the app border style */
+        .StripeElement {
+          padding: 10px 0;
+        }
+      `}</style>
     </form>
   );
 };

@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../axios";
-import { Container, Row, Col, Card, Form, Button, InputGroup, Spinner ,Badge} from "react-bootstrap";
+import { Container, Row, Col, Form, Button, Spinner } from "react-bootstrap";
 
 const UpdateProduct = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  
+  // SUPPORT FOR MULTIPLE IMAGES
+  const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
   
   const [updateProduct, setUpdateProduct] = useState({
     id: null,
@@ -28,11 +30,12 @@ const UpdateProduct = () => {
         const response = await API.get(`/product/${id}`);
         setUpdateProduct(response.data);
         
-        // Fetch existing image and convert to file for the form state
+        // Fetch existing primary image for initial preview
         const responseImage = await API.get(`/product/${id}/image`, { responseType: "blob" });
         const imageFile = new File([responseImage.data], response.data.imageName, { type: responseImage.data.type });
-        setImage(imageFile);
-        setImagePreview(URL.createObjectURL(responseImage.data));
+        
+        setImages([imageFile]);
+        setImagePreviews([URL.createObjectURL(responseImage.data)]);
         
         setLoading(false);
       } catch (error) {
@@ -47,7 +50,12 @@ const UpdateProduct = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
-    formData.append("imageFile", image);
+    
+    // SUPPORT FOR MULTIPLE FILES: Appending all selected images
+    images.forEach((file) => {
+      formData.append("imageFiles", file); // Key matches AddProduct logic
+    });
+
     formData.append(
       "product",
       new Blob([JSON.stringify(updateProduct)], { type: "application/json" })
@@ -57,12 +65,12 @@ const UpdateProduct = () => {
       headers: { "Content-Type": "multipart/form-data" },
     })
     .then(() => {
-      alert("Product updated successfully!");
-      navigate("/admin/products"); // Redirect back to inventory
+      alert("PRODUCT REVISION SUCCESSFUL");
+      navigate("/admin/products");
     })
     .catch((error) => {
       console.error("Error updating product:", error);
-      alert("Failed to update product.");
+      alert("FAILED TO SYNC CHANGES");
     });
   };
 
@@ -72,145 +80,181 @@ const UpdateProduct = () => {
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setImage(file);
-    if (file) {
-      setImagePreview(URL.createObjectURL(file));
-    }
+    const files = Array.from(e.target.files);
+    setImages(files);
+    
+    // Generate previews for multiple files
+    const previews = files.map((file) => URL.createObjectURL(file));
+    setImagePreviews(previews);
   };
 
   if (loading) return (
-    <div className="text-center" style={{ marginTop: "150px" }}>
-      <Spinner animation="border" variant="primary" />
+    <div className="text-center bg-white" style={{ height: "100vh", paddingTop: "200px" }}>
+      <Spinner animation="border" variant="dark" />
+      <p className="mt-3 Oswald-font fw-black text-uppercase">Fetching Inventory Data...</p>
     </div>
   );
 
   return (
-    <div className="update-product-wrapper" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh", paddingTop: "110px", paddingBottom: "50px" }}>
+    <div className="update-product-wrapper bg-white" style={{ minHeight: "100vh", paddingTop: "140px", paddingBottom: "80px" }}>
       <Container>
-        <Row className="g-4">
-          {/* Left Side: Live Preview Card */}
-          <Col lg={4}>
-            <div className="sticky-top" style={{ top: "110px" }}>
-              <h5 className="fw-bold mb-3 text-muted text-uppercase small">Live Preview</h5>
-              <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
-                <div className="p-4 bg-white text-center" style={{ height: "250px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
-                    className="img-fluid" 
-                    style={{ maxHeight: "100%", objectFit: "contain" }} 
-                  />
+        <div className="border-bottom border-dark pb-3 mb-5">
+          <h1 className="fw-black text-uppercase mb-0 Oswald-font" style={{ fontSize: "2.5rem", letterSpacing: "1.5px" }}>
+            Edit Product
+          </h1>
+          <span className="fw-bold text-muted small Oswald-font text-uppercase">Asset ID: #{id}</span>
+        </div>
+
+        <Form onSubmit={handleSubmit}>
+          <Row className="g-5">
+            {/* Left Column: Industrial Preview */}
+            <Col lg={4}>
+              <div className="sticky-top" style={{ top: "160px" }}>
+                <h6 className="Oswald-font fw-black text-uppercase mb-3" style={{ letterSpacing: '1px' }}>Current Asset View</h6>
+                <div className="border border-dark p-2 bg-white">
+                  <div className="bg-light d-flex align-items-center justify-content-center flex-wrap gap-1 p-2" style={{ minHeight: "300px" }}>
+                    {imagePreviews.map((src, idx) => (
+                        <img 
+                          key={idx}
+                          src={src} 
+                          alt={`Preview ${idx}`} 
+                          className="img-fluid border border-dark bg-white" 
+                          style={{ maxHeight: imagePreviews.length > 1 ? "140px" : "280px", objectFit: "contain" }} 
+                        />
+                    ))}
+                  </div>
+                  <div className="p-3 border-top border-dark">
+                    <span className="text-muted text-uppercase fw-bold d-block mb-1" style={{ fontSize: "10px", letterSpacing: "1px" }}>{updateProduct.brand || "BRAND"}</span>
+                    <h5 className="Oswald-font fw-black text-uppercase mb-2">{updateProduct.name || "PRODUCT NAME"}</h5>
+                    <h4 className="Oswald-font fw-black mb-0">₹{updateProduct.price || "0.00"}</h4>
+                  </div>
                 </div>
-                <Card.Body className="bg-light">
-                  <Badge bg="primary" className="mb-2">{updateProduct.brand || "Brand"}</Badge>
-                  <h5 className="fw-bold">{updateProduct.name || "Product Name"}</h5>
-                  <h4 className="text-primary fw-bold">${updateProduct.price || "0.00"}</h4>
-                  <p className="small text-muted text-truncate">{updateProduct.description}</p>
-                </Card.Body>
-              </Card>
-            </div>
-          </Col>
-
-          {/* Right Side: Edit Form */}
-          <Col lg={8}>
-            <Card className="border-0 shadow-sm rounded-4 p-4 p-lg-5">
-              <div className="mb-4">
-                <h3 className="fw-bold">Update Inventory Item</h3>
-                <p className="text-muted">Modify the details for Product ID: <span className="text-primary fw-bold">#{id}</span></p>
               </div>
+            </Col>
 
-              <Form onSubmit={handleSubmit}>
-                <Row className="g-3">
-                  <Col md={6}>
+            {/* Right Column: Technical Specifications */}
+            <Col lg={8}>
+              <div className="border border-dark p-4 p-lg-5">
+                <h5 className="Oswald-font fw-black text-uppercase mb-4" style={{ letterSpacing: '1px' }}>Inventory Specifications</h5>
+                
+                <Row className="g-4">
+                  <Col md={12}>
                     <Form.Group>
-                      <Form.Label className="small fw-bold text-muted text-uppercase">Product Name</Form.Label>
+                      <Form.Label className="Oswald-font fw-bold text-uppercase small">Full Product Title</Form.Label>
                       <Form.Control 
                         name="name" value={updateProduct.name} onChange={handleChange} 
-                        className="bg-light border-0 py-2" required
+                        className="rounded-0 border-dark shadow-none py-2" required
                       />
                     </Form.Group>
                   </Col>
+                  
                   <Col md={6}>
                     <Form.Group>
-                      <Form.Label className="small fw-bold text-muted text-uppercase">Brand</Form.Label>
+                      <Form.Label className="Oswald-font fw-bold text-uppercase small">Manufacturer/Brand</Form.Label>
                       <Form.Control 
                         name="brand" value={updateProduct.brand} onChange={handleChange} 
-                        className="bg-light border-0 py-2" required
+                        className="rounded-0 border-dark shadow-none py-2" required
                       />
                     </Form.Group>
                   </Col>
-                  <Col xs={12}>
+
+                  <Col md={6}>
                     <Form.Group>
-                      <Form.Label className="small fw-bold text-muted text-uppercase">Description</Form.Label>
-                      <Form.Control 
-                        as="textarea" rows={3} name="description" 
-                        value={updateProduct.description} onChange={handleChange} 
-                        className="bg-light border-0" required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={4}>
-                    <Form.Label className="small fw-bold text-muted text-uppercase">Price</Form.Label>
-                    <InputGroup>
-                      <InputGroup.Text className="bg-light border-0">$</InputGroup.Text>
-                      <Form.Control 
-                        type="number" name="price" value={updateProduct.price} 
-                        onChange={handleChange} className="bg-light border-0" required
-                      />
-                    </InputGroup>
-                  </Col>
-                  <Col md={4}>
-                    <Form.Group>
-                      <Form.Label className="small fw-bold text-muted text-uppercase">Category</Form.Label>
+                      <Form.Label className="Oswald-font fw-bold text-uppercase small">Market Category</Form.Label>
                       <Form.Select 
                         name="category" value={updateProduct.category} 
-                        onChange={handleChange} className="bg-light border-0"
+                        onChange={handleChange} className="rounded-0 border-dark shadow-none py-2"
                       >
-                        <option value="laptop">Laptop</option>
-                        <option value="headphone">Headphone</option>
-                        <option value="mobile">Mobile</option>
-                        <option value="electronics">Electronics</option>
-                        <option value="toys">Toys</option>
-                        <option value="fashion">Fashion</option>
+                        <option value="laptop">LAPTOP</option>
+                        <option value="headphone">HEADPHONE</option>
+                        <option value="mobile">MOBILE</option>
+                        <option value="electronics">ELECTRONICS</option>
+                        <option value="fashion">FASHION & APPAREL</option>
+                        <option value="toys">TOYS</option>
+                        <option value="home">HOME & KITCHEN</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
+
+                  <Col xs={12}>
                     <Form.Group>
-                      <Form.Label className="small fw-bold text-muted text-uppercase">Stock</Form.Label>
+                      <Form.Label className="Oswald-font fw-bold text-uppercase small">Technical Description</Form.Label>
                       <Form.Control 
-                        type="number" name="stockQuantity" 
-                        value={updateProduct.stockQuantity} onChange={handleChange} 
-                        className="bg-light border-0"
+                        as="textarea" rows={5} name="description" 
+                        value={updateProduct.description} onChange={handleChange} 
+                        className="rounded-0 border-dark shadow-none py-3" required
                       />
                     </Form.Group>
                   </Col>
-                  <Col xs={12}>
+
+                  <Col md={6}>
                     <Form.Group>
-                      <Form.Label className="small fw-bold text-muted text-uppercase">Replace Image</Form.Label>
-                      <Form.Control type="file" onChange={handleImageChange} className="bg-light border-0" />
+                      <Form.Label className="Oswald-font fw-bold text-uppercase small">Unit Price (INR)</Form.Label>
+                      <Form.Control 
+                        type="number" name="price" value={updateProduct.price} 
+                        onChange={handleChange} className="rounded-0 border-dark shadow-none py-2" required
+                      />
                     </Form.Group>
                   </Col>
-                  <Col xs={12}>
-                    <Form.Check 
-                      type="switch" label="Product Available for Sale" 
-                      checked={updateProduct.productAvailable}
-                      onChange={(e) => setUpdateProduct({...updateProduct, productAvailable: e.target.checked})}
-                    />
+
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="Oswald-font fw-bold text-uppercase small">Stock Quantity</Form.Label>
+                      <Form.Control 
+                        type="number" name="stockQuantity" 
+                        value={updateProduct.stockQuantity} onChange={handleChange} 
+                        className="rounded-0 border-dark shadow-none py-2" required
+                      />
+                    </Form.Group>
                   </Col>
+
+                  <Col xs={12}>
+                    <div className="p-3 bg-light border border-dark">
+                      <Form.Group className="mb-0">
+                        <Form.Label className="Oswald-font fw-bold text-uppercase small">Replace Visual Assets (Multiple)</Form.Label>
+                        <Form.Control 
+                            type="file" 
+                            onChange={handleImageChange} 
+                            multiple // ENABLED MULTIPLE SELECTION
+                            accept="image/*"
+                            className="rounded-0 border-dark bg-white shadow-none" 
+                        />
+                      </Form.Group>
+                    </div>
+                  </Col>
+
+                  <Col xs={12}>
+                    <div className="d-flex align-items-center justify-content-between py-2">
+                      <Form.Check 
+                        type="switch" 
+                        label="ACTIVE LISTING" 
+                        className="Oswald-font fw-black text-uppercase small"
+                        checked={updateProduct.productAvailable}
+                        onChange={(e) => setUpdateProduct({...updateProduct, productAvailable: e.target.checked})}
+                      />
+                    </div>
+                  </Col>
+
                   <Col xs={12} className="mt-4">
-                    <Button type="submit" className="w-100 py-3 rounded-pill fw-bold border-0 shadow" 
-                            style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
-                      Save Changes
+                    <Button type="submit" variant="dark" className="w-100 py-3 rounded-0 Oswald-font fw-black text-uppercase shadow-none border-0" style={{ letterSpacing: '2px' }}>
+                      Save Revision <i className="bi bi-arrow-right ms-2"></i>
                     </Button>
                   </Col>
                 </Row>
-              </Form>
-            </Card>
-          </Col>
-        </Row>
+              </div>
+            </Col>
+          </Row>
+        </Form>
       </Container>
+
+      <style>{`
+        .fw-black { font-weight: 900 !important; }
+        .Oswald-font { font-family: 'Oswald', sans-serif; }
+        .form-control:focus, .form-select:focus {
+          border-color: #000 !important;
+          box-shadow: none !important;
+        }
+      `}</style>
     </div>
   );
 };

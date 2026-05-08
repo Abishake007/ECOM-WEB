@@ -11,103 +11,100 @@ const SignIn = () => {
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
-  e.preventDefault(); // Prevents the browser from refreshing the page
-  setMessage("");
-  setLoading(true);
+    e.preventDefault();
+    setMessage("");
+    setLoading(true);
 
-  AuthService.login(username, password)
-    .then((data) => {
-      console.log("Login logic finished. Data:", data);
-      setLoading(false);
-      
-      // Navigate first so React handles the state change
-      navigate("/");
-      
-      // ONLY reload if you absolutely must update the Navbar immediately
-      // Better: Use a state change in your AppContext
-      window.location.reload(); 
-    })
-    .catch((error) => {
-      setLoading(false);
-      const resMessage = error.response?.data?.message || error.message || "Login Failed";
-      setMessage(resMessage);
-      console.error("Login Error:", error);
-    });
-};
+    AuthService.login(username, password)
+      .then((data) => {
+        setLoading(false);
+        navigate("/");
+        window.location.reload(); 
+      })
+      .catch((error) => {
+        setLoading(false);
+        const resMessage = error.response?.data?.message || error.message || "LOGIN FAILED";
+        setMessage(resMessage);
+      });
+  };
 
   return (
-    <div className="auth-page-wrapper d-flex align-items-center justify-content-center" 
-         style={{ minHeight: "100vh", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
+    <div className="auth-page-wrapper d-flex align-items-center justify-content-center bg-white" 
+         style={{ minHeight: "100vh", fontFamily: "'Oswald', sans-serif" }}>
       
       <div className="container">
         <div className="row justify-content-center">
-          <div className="col-md-5">
-            <div className="card border-0 shadow-lg p-4 p-lg-5" style={{ borderRadius: "24px" }}>
+          <div className="col-md-5 col-lg-4">
+            {/* Minimalist Card: Sharp edges, heavy borders */}
+            <div className="card border border-dark border-2 p-4 p-lg-5 shadow-none" style={{ borderRadius: "0px" }}>
               
-              <div className="text-center mb-4">
-                <div className="d-inline-block p-3 rounded-circle bg-light mb-3">
-                  <i className="bi bi-shield-lock-fill text-primary fs-2"></i>
-                </div>
-                <h2 className="fw-bold">Welcome Back</h2>
-                <p className="text-muted">Enter your credentials to access your account</p>
+              <div className="text-start mb-5">
+                <h1 className="fw-black text-uppercase mb-2" style={{ letterSpacing: "1px", fontSize: "2.5rem" }}>
+                  Login
+                </h1>
+                <p className="text-muted small fw-bold text-uppercase" style={{ letterSpacing: "1.5px" }}>
+                  Access your creator account
+                </p>
               </div>
 
-              <form onSubmit={handleSubmit}>
-                <div className="form-floating mb-3">
+              <form onSubmit={handleSubmit} className="text-uppercase">
+                <div className="mb-4">
+                  <label className="fw-black mb-2 small" style={{ letterSpacing: "1px" }}>Username</label>
                   <input
                     type="text"
-                    className="form-control bg-light border-0"
-                    id="username"
-                    placeholder="Username"
+                    className="form-control border border-dark bg-white py-3 px-3 fw-bold"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
-                    style={{ borderRadius: "12px" }}
+                    style={{ borderRadius: "0px", fontSize: "0.9rem" }}
                   />
-                  <label htmlFor="username">Username</label>
                 </div>
 
-                <div className="form-floating mb-4">
+                <div className="mb-5">
+                  <label className="fw-black mb-2 small" style={{ letterSpacing: "1px" }}>Password</label>
                   <input
                     type="password"
-                    className="form-control bg-light border-0"
-                    id="password"
-                    placeholder="Password"
+                    className="form-control border border-dark bg-white py-3 px-3 fw-bold"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    style={{ borderRadius: "12px" }}
+                    style={{ borderRadius: "0px", fontSize: "0.9rem" }}
                   />
-                  <label htmlFor="password">Password</label>
                 </div>
 
                 <button 
                   type="submit" 
-                  className="btn btn-primary w-100 py-3 fw-bold mb-3 shadow" 
+                  className="btn btn-dark w-100 py-3 fw-black text-uppercase d-flex align-items-center justify-content-between mb-4 shadow-none" 
                   disabled={loading}
-                  style={{ borderRadius: "12px", backgroundColor: "#764ba2", border: "none" }}
+                  style={{ borderRadius: "0px", letterSpacing: "2px" }}
                 >
                   {loading ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2"></span>
-                      Authenticating...
+                      <span>Authenticating...</span>
+                      <span className="spinner-border spinner-border-sm"></span>
                     </>
                   ) : (
-                    "Sign In"
+                    <>
+                      <span>Sign In</span>
+                      <i className="bi bi-arrow-right fs-4"></i>
+                    </>
                   )}
                 </button>
 
                 {message && (
-                  <div className="alert alert-danger border-0 small text-center" role="alert" style={{ borderRadius: "12px" }}>
-                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                  <div className="bg-danger text-white p-3 small text-center fw-bold mb-4" style={{ letterSpacing: "1px" }}>
+                    <i className="bi bi-exclamation-square-fill me-2"></i>
                     {message}
                   </div>
                 )}
               </form>
 
-              <div className="text-center mt-4 border-top pt-4">
-                <p className="text-muted mb-0">
-                  Don't have an account? <Link to="/signup" className="text-primary fw-bold text-decoration-none">Create Account</Link>
+              <div className="text-start mt-4 border-top border-dark pt-4">
+                <p className="text-muted small fw-bold text-uppercase mb-0" style={{ letterSpacing: "1px" }}>
+                  New to the club? <br/>
+                  <Link to="/signup" className="text-dark fw-black text-decoration-underline mt-2 d-inline-block">
+                    Register Now
+                  </Link>
                 </p>
               </div>
               
@@ -115,6 +112,16 @@ const SignIn = () => {
           </div>
         </div>
       </div>
+
+      <style>{`
+        .fw-black { font-weight: 900 !important; }
+        .form-control:focus { 
+          box-shadow: none !important; 
+          border-color: #000 !important;
+          background-color: #f8f9fa !important;
+        }
+        input { text-transform: uppercase; }
+      `}</style>
     </div>
   );
 };

@@ -5,60 +5,70 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 const AdminDashboard = () => {
   const location = useLocation();
 
-  // Helper to determine if a link is active for custom styling
+  // Helper to determine if a link is active
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="admin-wrapper" style={{ backgroundColor: "#f4f7f6", minHeight: "100vh", paddingTop: "90px" }}>
+    <div className="admin-wrapper bg-white" style={{ minHeight: "100vh", paddingTop: "140px", paddingBottom: "60px" }}>
       <Container>
-        <Row className="g-4">
-          {/* Sidebar Navigation */}
+        <div className="border-bottom border-dark pb-3 mb-5">
+          <h1 className="fw-black text-uppercase mb-0 Oswald-font" style={{ fontSize: "2.5rem", letterSpacing: "1.5px" }}>
+            Admin Panel
+          </h1>
+        </div>
+
+        <Row className="g-5">
+          {/* Sidebar Navigation - Adidas Style */}
           <Col lg={3}>
-            <div className="card border-0 shadow-sm p-3 rounded-4 bg-white sticky-top" style={{ top: "110px" }}>
-              <div className="d-flex align-items-center mb-4 ps-2">
-                <div className="bg-primary rounded-3 p-2 me-3 shadow-sm">
-                  <i className="bi bi-speedometer2 text-white fs-4"></i>
-                </div>
-                <h5 className="fw-bold mb-0">Admin Control</h5>
+            <div className="sticky-top" style={{ top: "160px" }}>
+              <div className="d-flex align-items-center mb-4 ps-1">
+                <i className="bi bi-shield-lock-fill fs-4 me-2"></i>
+                <span className="fw-black text-uppercase Oswald-font small" style={{ letterSpacing: '1px' }}>
+                  Management
+                </span>
               </div>
 
-              <Nav className="flex-column nav-pills">
+              <Nav className="flex-column">
                 <Nav.Link 
                   as={Link} 
                   to="/admin/orders" 
-                  className={`d-flex align-items-center rounded-3 mb-2 px-3 py-2 transition-all ${isActive('/admin/orders') ? 'bg-primary text-white shadow' : 'text-dark hover-bg-light'}`}
+                  className={`d-flex align-items-center mb-1 px-3 py-3 border border-dark Oswald-font fw-black text-uppercase shadow-none transition-all ${isActive('/admin/orders') ? 'bg-dark text-white' : 'bg-white text-dark hover-gray'}`}
+                  style={{ borderRadius: '0px', letterSpacing: '1px', fontSize: '13px' }}
                 >
-                  <i className="bi bi-cart-check me-3"></i>
+                  <i className="bi bi-cart-check me-3 fs-5"></i>
                   <span>Manage Orders</span>
                 </Nav.Link>
 
                 <Nav.Link 
                   as={Link} 
                   to="/admin/users" 
-                  className={`d-flex align-items-center rounded-3 mb-2 px-3 py-2 transition-all ${isActive('/admin/users') ? 'bg-primary text-white shadow' : 'text-dark hover-bg-light'}`}
+                  className={`d-flex align-items-center mb-1 px-3 py-3 border border-dark Oswald-font fw-black text-uppercase shadow-none transition-all ${isActive('/admin/users') ? 'bg-dark text-white' : 'bg-white text-dark hover-gray'}`}
+                  style={{ borderRadius: '0px', letterSpacing: '1px', fontSize: '13px' }}
                 >
-                  <i className="bi bi-people me-3"></i>
+                  <i className="bi bi-people me-3 fs-5"></i>
                   <span>Manage Users</span>
                 </Nav.Link>
 
                 <Nav.Link 
                   as={Link} 
                   to="/admin/products" 
-                  className={`d-flex align-items-center rounded-3 mb-2 px-3 py-2 transition-all ${isActive('/admin/products') ? 'bg-primary text-white shadow' : 'text-dark hover-bg-light'}`}
+                  className={`d-flex align-items-center mb-1 px-3 py-3 border border-dark Oswald-font fw-black text-uppercase shadow-none transition-all ${isActive('/admin/products') ? 'bg-dark text-white' : 'bg-white text-dark hover-gray'}`}
+                  style={{ borderRadius: '0px', letterSpacing: '1px', fontSize: '13px' }}
                 >
-                  <i className="bi bi-box-seam me-3"></i>
-                  <span>Manage Inventory</span>
+                  <i className="bi bi-box-seam me-3 fs-5"></i>
+                  <span>Inventory</span>
                 </Nav.Link>
                 
-                <hr className="my-3 opacity-10" />
+                <div className="my-4 border-top border-dark border-opacity-25" />
                 
                 <Nav.Link 
                   as={Link} 
                   to="/add_product" 
-                  className="d-flex align-items-center text-success rounded-3 px-3 py-2 hover-bg-light"
+                  className="d-flex align-items-center px-3 py-3 border border-dark bg-white text-dark Oswald-font fw-black text-uppercase shadow-none hover-gray"
+                  style={{ borderRadius: '0px', letterSpacing: '1px', fontSize: '13px' }}
                 >
-                  <i className="bi bi-plus-circle-dotted me-3"></i>
-                  <span>Add New Product</span>
+                  <i className="bi bi-plus-lg me-3 fs-5"></i>
+                  <span>Add Product</span>
                 </Nav.Link>
               </Nav>
             </div>
@@ -66,24 +76,39 @@ const AdminDashboard = () => {
 
           {/* Main Content Area */}
           <Col lg={9}>
-            <div className="card border-0 shadow-sm rounded-4 bg-white" style={{ minHeight: '600px' }}>
-              <div className="card-header bg-transparent border-0 pt-4 px-4">
+            <div className="border border-dark p-4 p-lg-5" style={{ minHeight: '600px', borderRadius: '0px' }}>
+              <div className="mb-4">
                 <nav aria-label="breadcrumb">
                   <ol className="breadcrumb mb-0">
-                    <li className="breadcrumb-item small text-uppercase fw-bold text-muted">Dashboard</li>
-                    <li className="breadcrumb-item small text-uppercase fw-bold active text-primary" aria-current="page">
+                    <li className="breadcrumb-item Oswald-font fw-bold text-muted small text-uppercase">Admin</li>
+                    <li className="breadcrumb-item Oswald-font fw-black text-dark small text-uppercase active" aria-current="page">
                       {location.pathname.split('/').pop()}
                     </li>
                   </ol>
                 </nav>
               </div>
-              <div className="card-body p-4 pt-2">
+              
+              <div className="admin-content-outlet">
                 <Outlet />
               </div>
             </div>
           </Col>
         </Row>
       </Container>
+
+      <style>{`
+        .fw-black { font-weight: 900 !important; }
+        .Oswald-font { font-family: 'Oswald', sans-serif; }
+        .transition-all { transition: all 0.2s ease-in-out; }
+        .hover-gray:hover {
+          background-color: #f8f9fa !important;
+          transform: translateX(5px);
+        }
+        .breadcrumb-item + .breadcrumb-item::before {
+          content: "/";
+          color: #000;
+        }
+      `}</style>
     </div>
   );
 };

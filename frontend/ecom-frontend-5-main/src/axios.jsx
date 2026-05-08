@@ -9,7 +9,7 @@ API.interceptors.request.use((config) => {
   if (userData) {
     const user = JSON.parse(userData);
     // Use 'accessToken' as the key since your backend likely sends it this way
-    const token = user.accessToken || user.token; 
+    const token = user.accessToken || user.token || user.jwt; 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

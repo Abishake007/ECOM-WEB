@@ -64,11 +64,17 @@ public class WishlistController {
 
         return ResponseEntity.ok(userWishlist);
     }
-    @DeleteMapping("/wishlist/remove/{productId}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<?> removeFromWishlist(@PathVariable int productId) {
-        // Your logic to remove the item from the database
-        // Example: wishlistService.removeItem(userDetails.getId(), productId);
-        return ResponseEntity.ok(new MessageResponse("Item removed from wishlist"));
-    }
+   // CHANGE THIS LINE: Remove the redundant "/wishlist"
+    @DeleteMapping("/remove/{productId}")
+@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+public ResponseEntity<?> removeFromWishlist(@PathVariable Integer productId) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+    Long userId = userDetails.getId();
+
+    // Now uses the method we just added to the Repository
+    wishlistRepository.deleteByUserIdAndProductId(userId, productId);
+
+    return ResponseEntity.ok(new MessageResponse("Item removed from wishlist"));
+}
 }

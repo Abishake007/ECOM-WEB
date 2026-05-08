@@ -6,6 +6,7 @@ import com.telusko.ecom_proj.security.services.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -21,7 +22,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableMethodSecurity
@@ -40,7 +40,6 @@ public class WebSecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        // Pass userDetailsService directly into the constructor to fix the error
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
@@ -56,15 +55,10 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Define the CORS configuration source explicitly.
-     * This fixes the "Failed to initialize payment" by allowing headers like Accept/Origin.
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-        // CRITICAL: You must explicitly add "DELETE" here
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
@@ -74,23 +68,35 @@ public class WebSecurityConfig {
         return source;
     }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.cors(cors -> cors.configurationSource(corsConfigurationSource())) // Use your defined Bean
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // Explicitly permit OPTIONS
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/products/**").permitAll() // Public products list
-                        .requestMatchers("/api/product/**").authenticated() // Require login for specific product actions
-                        .anyRequest().authenticated()
-                );
+  @Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        // 1. Ensure CSRF is disabled for API calls
+        .csrf(csrf -> csrf.disable()) 
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+        .authorizeHttpRequests(auth -> auth
+            // 2. Preflight must always be first
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-        http.authenticationProvider(authenticationProvider());
-        http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+            // 3. SECURE WISHLIST (Move this above everything else)
+            // Use authenticated() specifically for the Wishlist paths
+            .requestMatchers("/api/wishlist/**").authenticated()
+            .requestMatchers("/api/user/**").authenticated()
 
-        return http.build();
-    }
+            // 4. PUBLIC ROUTES
+            .requestMatchers("/api/auth/**").permitAll()
+            .requestMatchers("/api/products/**").permitAll() 
+            .requestMatchers("/api/product/**").permitAll()
+
+            // 5. Global fallback
+            .anyRequest().authenticated()
+        );
+
+    http.authenticationProvider(authenticationProvider());
+    // 6. Ensure the JWT filter is added before the auth filter
+    http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+
+    return http.build();
+}
 }

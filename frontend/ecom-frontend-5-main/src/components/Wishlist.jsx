@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import API from '../axios';
 import AppContext from "../Context/Context";
-import { Container, Row, Col, Card, Button, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import unplugged from "../assets/unplugged.png";
 import { Link } from "react-router-dom";
 
@@ -27,28 +27,33 @@ const Wishlist = () => {
   }, []);
 
   const removeFromWishlist = async (productId) => {
-  try {
-    // This call will now automatically include the "Authorization: Bearer <token>" header
-    await API.delete(`/wishlist/remove/${productId}`);
-    // Update your local state here
-  } catch (error) {
-    console.error("Error removing from wishlist:", error);
-  }
-};
+    try {
+      await API.delete(`/wishlist/remove/${productId}`);
+      // UPDATE STATE: Remove the item from the local list immediately
+      setItems(prevItems => prevItems.filter(item => item.id !== productId));
+    } catch (error) {
+      console.error("Error removing from wishlist:", error);
+    }
+  };
 
   if (loading) return (
-    <div className="text-center" style={{ marginTop: "150px" }}>
-      <Spinner animation="border" variant="primary" />
-      <p className="text-muted mt-2">Opening your collection...</p>
+    <div className="d-flex justify-content-center align-items-center bg-white" style={{ height: "100vh" }}>
+      <div className="text-center">
+        <Spinner animation="border" variant="dark" />
+        <p className="fw-black text-uppercase mt-3 Oswald-font">Opening your collection...</p>
+      </div>
     </div>
   );
 
   return (
-    <div className="wishlist-wrapper" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh", paddingTop: "110px" }}>
+    <div className="wishlist-wrapper bg-white" style={{ minHeight: "100vh", paddingTop: "140px", paddingBottom: "80px" }}>
       <Container>
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="fw-bold mb-0">My Wishlist</h2>
-          <span className="badge bg-white text-dark border rounded-pill px-3 py-2 shadow-sm">
+        {/* Adidas Header Style */}
+        <div className="d-flex justify-content-between align-items-end border-bottom border-dark pb-3 mb-5">
+          <h1 className="fw-black text-uppercase mb-0 Oswald-font" style={{ fontSize: "2.5rem", letterSpacing: "1.5px" }}>
+            My Wishlist
+          </h1>
+          <span className="fw-bold text-uppercase small Oswald-font text-muted">
             {items.length} Saved Items
           </span>
         </div>
@@ -56,68 +61,91 @@ const Wishlist = () => {
         <Row className="g-4">
           {items.length === 0 ? (
             <Col className="text-center py-5">
-              <div className="bg-white p-5 rounded-4 shadow-sm">
+              <div className="border border-dark p-5">
                 <i className="bi bi-heart display-1 text-muted opacity-25"></i>
-                <h3 className="mt-3 text-muted">Your wishlist is empty</h3>
-                <p className="text-muted mb-4">Save items you love to find them easily later.</p>
-                <Link to="/" className="btn btn-primary rounded-pill px-4">Start Exploring</Link>
+                <h3 className="fw-black text-uppercase mt-4 Oswald-font">Your wishlist is empty</h3>
+                <p className="text-muted fw-bold text-uppercase small mb-4" style={{ letterSpacing: "1px" }}>
+                  Save items you love to find them easily later.
+                </p>
+                <Link to="/" className="btn btn-dark fw-black text-uppercase px-5 py-3 shadow-none" style={{ borderRadius: "0px", letterSpacing: "2px" }}>
+                  Start Exploring <i className="bi bi-arrow-right ms-2"></i>
+                </Link>
               </div>
             </Col>
           ) : (
             items.map(item => {
+              // Safety check for nested product objects
               const product = item.product ? item.product : item;
               
               return (
                 <Col xs={12} sm={6} md={4} lg={3} key={item.id}>
-                  <Card className="border-0 shadow-sm h-100 rounded-4 overflow-hidden position-relative custom-hover-card">
-                    {/* Quick Remove Button */}
+                  {/* Modern Sharp Card */}
+                  <div className="product-card h-100 bg-white border border-dark p-3 position-relative">
+                    
+                    {/* Minimalist Remove Button */}
                     <button 
-                      className="btn btn-light btn-sm position-absolute top-0 end-0 m-2 rounded-circle shadow-sm"
-                      style={{ zIndex: 5, width: "32px", height: "32px", border: "none" }}
+                      className="btn btn-dark btn-sm position-absolute top-0 end-0 m-2 shadow-none"
+                      style={{ zIndex: 5, borderRadius: "0px", width: "30px", height: "30px", padding: "0" }}
                       onClick={() => removeFromWishlist(item.id)}
                       title="Remove from Wishlist"
                     >
-                      <i className="bi bi-x-lg text-danger small"></i>
+                      <i className="bi bi-x-lg"></i>
                     </button>
 
-                    <div className="p-3 bg-white d-flex align-items-center justify-content-center" style={{ height: "180px" }}>
-                      <Card.Img 
-                        variant="top"
+                    {/* Image Stage */}
+                    <div className="image-stage d-flex align-items-center justify-content-center mb-3 bg-light" style={{ height: "200px" }}>
+                      <img 
                         src={product.imageData ? `data:${product.imageType};base64,${product.imageData}` : unplugged} 
-                        style={{ maxHeight: "100%", width: "auto", objectFit: "contain" }}
+                        style={{ maxHeight: "80%", maxWidth: "80%", objectFit: "contain" }}
+                        alt={product.name}
                       />
                     </div>
 
-                    <Card.Body className="d-flex flex-column pt-0">
+                    <div className="d-flex flex-column">
                       <div className="mb-2">
-                        <small className="text-primary fw-bold text-uppercase" style={{ fontSize: "0.7rem" }}>{product.brand}</small>
-                        <Card.Title className="fs-6 fw-bold mb-1 text-truncate" title={product.name}>
-                          {product.name?.toUpperCase()}
-                        </Card.Title>
+                        <span className="text-muted text-uppercase fw-bold d-block mb-1" style={{ fontSize: "10px", letterSpacing: "1px" }}>
+                           {product.brand}
+                        </span>
+                        <h6 className="fw-black text-uppercase Oswald-font text-truncate mb-0" style={{ letterSpacing: "0.5px" }}>
+                          {product.name}
+                        </h6>
                       </div>
                       
-                      <div className="mt-auto">
-                        <h5 className="fw-bold text-dark mb-3">${product.price}</h5>
+                      <div className="mt-3">
+                        <h5 className="fw-black Oswald-font mb-3">₹{product.price}</h5>
+                        
                         <Button 
-                          variant="primary" 
-                          className="w-100 rounded-pill py-2 fw-bold" 
-                          style={{ backgroundColor: "#764ba2", border: "none", fontSize: "0.85rem" }}
+                          variant="dark" 
+                          className="w-100 fw-black text-uppercase d-flex align-items-center justify-content-between px-3 py-2 shadow-none" 
+                          style={{ borderRadius: "0px", fontSize: "0.8rem", letterSpacing: "1px" }}
                           onClick={() => {
                             addToCart(product);
-                            alert(`${product.name} added to cart!`);
                           }}
                         >
-                          <i className="bi bi-cart-plus me-1"></i> Add to Cart
+                          <span>Add to Bag</span>
+                          <i className="bi bi-bag-plus fs-5"></i>
                         </Button>
                       </div>
-                    </Card.Body>
-                  </Card>
+                    </div>
+                  </div>
                 </Col>
               );
             })
           )}
         </Row>
       </Container>
+
+      <style>{`
+        .fw-black { font-weight: 900 !important; }
+        .Oswald-font { font-family: 'Oswald', sans-serif; }
+        .product-card {
+           transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .product-card:hover {
+           transform: translateY(-8px);
+           box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+        }
+      `}</style>
     </div>
   );
 };

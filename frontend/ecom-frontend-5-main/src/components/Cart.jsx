@@ -14,92 +14,106 @@ const Cart = () => {
     setTotal(sum);
   }, [cart]);
 
-  const shipping = cart.length > 0 ? 10.00 : 0; // Flat shipping rate example
+  const shipping = cart.length > 0 ? 10.00 : 0; 
 
   return (
-    <div className="cart-wrapper" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh", paddingTop: "100px" }}>
+    <div className="cart-wrapper bg-white" style={{ minHeight: "100vh", paddingTop: "140px", paddingBottom: "80px" }}>
       <div className="container">
-        <h2 className="fw-bold mb-4">Your Shopping Bag</h2>
+        <h1 className="fw-black text-uppercase mb-5 Oswald-font" style={{ letterSpacing: "1.5px", fontSize: "2.5rem" }}>
+          Your Bag <span className="text-muted fw-normal">({cart.length})</span>
+        </h1>
         
         {cart.length === 0 ? (
-          <div className="text-center py-5 shadow-sm bg-white rounded-4">
-            <i className="bi bi-bag-x display-1 text-muted opacity-25"></i>
-            <h3 className="mt-3 text-muted">Your cart is feeling light</h3>
-            <p className="text-muted">Add some products to get started!</p>
-            <Link to="/" className="btn btn-primary rounded-pill px-4 mt-2">Go Shopping</Link>
+          <div className="text-start py-5 border border-dark p-4 p-lg-5" style={{ borderRadius: "0px" }}>
+            <h2 className="fw-black text-uppercase Oswald-font">Your bag is empty</h2>
+            <p className="text-muted fw-bold text-uppercase small mb-4" style={{ letterSpacing: "1px" }}>Once you add something to your bag, it will appear here.</p>
+            <Link to="/" className="btn btn-dark fw-black text-uppercase px-5 py-3 shadow-none" style={{ borderRadius: "0px", letterSpacing: "2px" }}>
+              Shop Now <i className="bi bi-arrow-right ms-2"></i>
+            </Link>
           </div>
         ) : (
-          <div className="row g-4">
+          <div className="row g-5">
             {/* 1. Left Side: Cart Items List */}
             <div className="col-lg-8">
-              <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div className="list-group list-group-flush">
-                  {cart.map((item) => (
-                    <div key={item.id} className="list-group-item p-4 border-bottom">
-                      <div className="row align-items-center">
-                        <div className="col-3 col-md-2">
+              <div className="border-top border-dark">
+                {cart.map((item) => (
+                  <div key={item.id} className="py-4 border-bottom border-dark">
+                    <div className="row align-items-start">
+                      <div className="col-4 col-md-3">
+                        <div className="bg-light p-2 text-center">
                           <img 
                             src={item.imageUrl || (item.imageData ? `data:${item.imageType};base64,${item.imageData}` : unplugged)} 
                             alt={item.name} 
-                            className="img-fluid rounded-3 shadow-sm"
-                            style={{ objectFit: "contain", backgroundColor: "#fff" }} 
+                            className="img-fluid"
+                            style={{ maxHeight: "150px", objectFit: "contain" }} 
                           />
                         </div>
-                        <div className="col-5 col-md-6">
-                          <h6 className="fw-bold mb-1 text-truncate">{item.name?.toUpperCase()}</h6>
-                          <p className="text-muted small mb-0">Unit Price: ${item.price}</p>
-                          <div className="d-flex align-items-center mt-2">
-                             <span className="badge bg-light text-dark border fw-normal">Quantity: {item.quantity || 1}</span>
+                      </div>
+                      <div className="col-8 col-md-9 d-flex flex-column justify-content-between h-100">
+                        <div className="d-flex justify-content-between align-items-start">
+                          <div>
+                            <h5 className="fw-black text-uppercase Oswald-font mb-1" style={{ letterSpacing: "0.5px" }}>{item.name}</h5>
+                            <p className="text-muted small fw-bold text-uppercase mb-0">Price: ₹{item.price}</p>
+                            <p className="small fw-bold text-uppercase mt-1">Quantity: {item.quantity || 1}</p>
+                          </div>
+                          <div className="text-end">
+                            <h5 className="fw-black Oswald-font">₹{(item.price * (item.quantity || 1)).toFixed(2)}</h5>
                           </div>
                         </div>
-                        <div className="col-4 col-md-4 text-end">
-                          <h5 className="fw-bold mb-2">${(item.price * (item.quantity || 1)).toFixed(2)}</h5>
+                        <div className="mt-3">
                           <button 
-                            className="btn btn-sm btn-link text-danger text-decoration-none p-0" 
+                            className="btn btn-link text-dark text-uppercase fw-black p-0 small text-decoration-underline" 
                             onClick={() => removeFromCart(item.id)}
+                            style={{ fontSize: "11px", letterSpacing: "1px" }}
                           >
-                            <i className="bi bi-trash3 me-1"></i> Remove
+                            Remove
                           </button>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
 
             {/* 2. Right Side: Order Summary Sidebar */}
             <div className="col-lg-4">
-              <div className="card border-0 shadow-sm rounded-4 p-4 sticky-top" style={{ top: "110px" }}>
-                <h5 className="fw-bold mb-4">Order Summary</h5>
-                <div className="d-flex justify-content-between mb-2">
-                  <span className="text-muted">Subtotal</span>
-                  <span className="fw-semibold">${total.toFixed(2)}</span>
+              <div className="border border-dark p-4 sticky-top" style={{ top: "160px", borderRadius: "0px" }}>
+                <h4 className="fw-black text-uppercase Oswald-font mb-4">Summary</h4>
+                
+                <div className="d-flex justify-content-between mb-3 text-uppercase small fw-bold">
+                  <span>Subtotal</span>
+                  <span>₹{total.toFixed(2)}</span>
                 </div>
-                <div className="d-flex justify-content-between mb-2">
-                  <span className="text-muted">Estimated Shipping</span>
-                  <span className="fw-semibold">${shipping.toFixed(2)}</span>
+                
+                <div className="d-flex justify-content-between mb-3 text-uppercase small fw-bold">
+                  <span>Shipping</span>
+                  <span>₹{shipping.toFixed(2)}</span>
                 </div>
-                <div className="d-flex justify-content-between mb-4">
-                  <span className="text-muted">Tax</span>
-                  <span className="fw-semibold">Calculated at checkout</span>
+                
+                <div className="d-flex justify-content-between mb-4 text-uppercase small fw-bold">
+                  <span>Tax</span>
+                  <span>Calculated at checkout</span>
                 </div>
-                <hr />
-                <div className="d-flex justify-content-between mb-4 mt-2">
-                  <span className="h5 fw-bold">Total</span>
-                  <span className="h5 fw-bold text-primary">${(total + shipping).toFixed(2)}</span>
+                
+                <div className="border-top border-dark pt-3 d-flex justify-content-between mb-4">
+                  <span className="h5 fw-black text-uppercase Oswald-font">Total</span>
+                  <span className="h5 fw-black Oswald-font">₹{(total + shipping).toFixed(2)}</span>
                 </div>
+
                 <button 
-                  className="btn btn-primary btn-lg w-100 rounded-pill fw-bold" 
-                  style={{ backgroundColor: "#764ba2", border: "none" }}
+                  className="btn btn-dark btn-lg w-100 fw-black text-uppercase d-flex align-items-center justify-content-between px-4 py-3 shadow-none" 
+                  style={{ borderRadius: "0px", letterSpacing: "2px" }}
                   onClick={() => setShowPopup(true)}
                 >
-                  Proceed to Checkout
+                  <span>Checkout</span>
+                  <i className="bi bi-arrow-right fs-4"></i>
                 </button>
-                <div className="text-center mt-3">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" height="20" className="me-2 opacity-50"/>
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Visa_Inc._logo_%282005%E2%80%932014%29.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original" alt="Visa" height="15" className="me-3 opacity-75"/>
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" height="20" className="opacity-50"/>
+
+                <div className="mt-4 border-top border-light pt-3 d-flex justify-content-center gap-3 grayscale">
+                   <i className="bi bi-credit-card fs-4"></i>
+                   <i className="bi bi-paypal fs-4"></i>
+                   <i className="bi bi-wallet2 fs-4"></i>
                 </div>
               </div>
             </div>
@@ -115,6 +129,13 @@ const Cart = () => {
           cartItems={cart}
         />
       )}
+
+      <style>{`
+        .fw-black { font-weight: 900 !important; }
+        .Oswald-font { font-family: 'Oswald', sans-serif; }
+        .grayscale i { opacity: 0.6; filter: grayscale(1); }
+        .btn-link:hover { color: #555 !important; }
+      `}</style>
     </div>
   );
 };

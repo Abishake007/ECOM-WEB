@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Spinner, ListGroup, Badge } from 'react-bootstrap';
+import { Modal, Button, Spinner } from 'react-bootstrap';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import axios from '../axios';
 import PaymentForm from './PaymentForm';
+import unplugged from "../assets/unplugged.png";
 
-// Stripe Publishable Key
 const stripePromise = loadStripe('pk_test_51TSWaI2OVQWK9oI9tI1U8cesyrjqJJftRr0Iwh44BBhZJyVTLQdKwxLdF0RNa5m9YizAt3e5vWhjFpPbF60qZL0U00NfncpOp4');
 
 const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice, handleCheckout }) => {
@@ -15,13 +15,9 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice, handleCheckou
   useEffect(() => {
     if (show && totalPrice > 0) {
       setLoading(true);
-      
-      const locale = navigator.language;
-      const userCurrency = (locale === 'en-IN' || locale === 'ta-IN') ? 'inr' : 'usd';
-
       axios.post('/payment/create-payment-intent', {
         amount: Math.round(totalPrice * 100),
-        currency: userCurrency
+        currency: 'inr'
       })
       .then(res => {
         setClientSecret(res.data.clientSecret);
@@ -40,86 +36,101 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice, handleCheckou
       onHide={handleClose} 
       centered 
       size="lg" 
-      className="checkout-modal"
-      backdrop="static" // Prevent accidental closing during payment
+      backdrop="static"
+      className="adidas-modal"
     >
-      <Modal.Header closeButton className="border-0 pb-0">
-        <Modal.Title className="fw-bold ps-2">Secure Checkout</Modal.Title>
+      <Modal.Header closeButton className="border-0 bg-white">
+        <Modal.Title className="fw-black text-uppercase Oswald-font pt-3" style={{ letterSpacing: '1.5px' }}>
+          Secure Checkout
+        </Modal.Title>
       </Modal.Header>
       
-      <Modal.Body className="p-4">
-        <div className="row g-4">
-          {/* Left Side: Order Summary */}
-          <div className="col-md-5 border-end pe-md-4">
-            <h6 className="text-uppercase small fw-bold text-muted mb-3">Order Summary</h6>
-            <div className="checkout-items" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-              {cartItems.map((item) => (
-                <div key={item.id} className="d-flex align-items-center mb-3">
-                  <div className="bg-light rounded p-1 me-3" style={{ width: '50px', height: '50px' }}>
-                    <img 
-                      src={item.imageUrl} 
-                      alt={item.name} 
-                      className="img-fluid h-100 w-100" 
-                      style={{ objectFit: 'contain' }} 
-                    />
+      <Modal.Body className="p-4 bg-white">
+        <div className="row g-0 border border-dark border-2">
+          {/* Summary Side */}
+          <div className="col-md-5 border-end border-dark p-4 bg-light">
+            <h6 className="fw-black text-uppercase small mb-4">Order Summary</h6>
+            
+            <div className="checkout-items no-scrollbar" style={{ maxHeight: '250px', overflowY: 'auto' }}>
+              {cartItems.map((item) => {
+                // FIXED IMAGE LOGIC: Handles both URL and Base64 data
+                const displayImg = item.imageUrl || 
+                  (item.imageData ? `data:${item.imageType};base64,${item.imageData}` : unplugged);
+
+                return (
+                  <div key={item.id} className="d-flex align-items-center mb-3 pb-3 border-bottom border-secondary border-opacity-25">
+                    <div className="bg-white border border-dark p-1 me-3" style={{ width: '60px', height: '60px' }}>
+                      <img 
+                        src={displayImg} 
+                        alt={item.name} 
+                        className="img-fluid h-100 w-100" 
+                        style={{ objectFit: 'contain' }} 
+                      />
+                    </div>
+                    <div className="flex-grow-1 overflow-hidden">
+                      <p className="mb-0 fw-black text-uppercase small text-truncate" style={{ fontSize: '11px' }}>{item.name}</p>
+                      <p className="mb-0 text-muted fw-bold" style={{ fontSize: '9px' }}>QTY: {item.quantity || 1}</p>
+                    </div>
+                    <div className="ms-2">
+                      <span className="fw-black small">₹{(item.price * (item.quantity || 1)).toFixed(2)}</span>
+                    </div>
                   </div>
-                  <div className="flex-grow-1 overflow-hidden">
-                    <p className="mb-0 fw-bold text-truncate small" title={item.name}>{item.name}</p>
-                    <p className="mb-0 text-muted extra-small">Qty: {item.quantity}</p>
-                  </div>
-                  <div className="ms-2">
-                    <span className="small fw-bold">${(item.price * item.quantity).toFixed(2)}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             
-            <div className="mt-4 pt-3 border-top">
-              <div className="d-flex justify-content-between mb-1">
-                <span className="text-muted small">Subtotal</span>
-                <span className="small fw-bold">${totalPrice.toFixed(2)}</span>
+            <div className="mt-4 pt-3 border-top border-dark">
+              <div className="d-flex justify-content-between mb-2 text-uppercase fw-bold" style={{ fontSize: '11px' }}>
+                <span>Subtotal</span>
+                <span>₹{totalPrice.toFixed(2)}</span>
               </div>
-              <div className="d-flex justify-content-between">
-                <span className="h5 fw-bold">Grand Total</span>
-                <span className="h5 fw-bold text-primary">${totalPrice.toFixed(2)}</span>
+              <div className="d-flex justify-content-between mt-2">
+                <span className="h4 fw-black text-uppercase Oswald-font">Total</span>
+                <span className="h4 fw-black Oswald-font">₹{totalPrice.toFixed(2)}</span>
               </div>
             </div>
 
-            <div className="mt-4 p-3 bg-light rounded-3 d-flex align-items-center">
-              <i className="bi bi-shield-lock-fill text-success fs-4 me-3"></i>
-              <div className="extra-small text-muted">
-                Your payment data is encrypted and processed via Stripe secure gateway.
+            <div className="mt-4 p-3 border border-dark d-flex align-items-center bg-white">
+              <i className="bi bi-shield-lock-fill text-dark fs-5 me-3"></i>
+              <div className="fw-bold text-uppercase" style={{ fontSize: '8px', letterSpacing: '0.5px', lineHeight: '1.4' }}>
+                Your data is encrypted and processed via Stripe secure gateway.
               </div>
             </div>
           </div>
 
-          {/* Right Side: Payment Form */}
-          <div className="col-md-7 ps-md-4">
-            <h6 className="text-uppercase small fw-bold text-muted mb-3">Payment Details</h6>
+          {/* Payment Side */}
+          <div className="col-md-7 p-4 bg-white">
+            <h6 className="fw-black text-uppercase small mb-4">Payment Details</h6>
             {loading ? (
               <div className="text-center py-5">
-                <Spinner animation="border" variant="primary" />
-                <p className="mt-3 text-muted small">Contacting Bank...</p>
+                <Spinner animation="border" variant="dark" />
+                <p className="mt-3 fw-black text-uppercase small">Initializing...</p>
               </div>
             ) : clientSecret ? (
               <Elements options={{ clientSecret }} stripe={stripePromise}>
                 <PaymentForm totalPrice={totalPrice} onPaymentSuccess={handleCheckout} />
               </Elements>
             ) : (
-              <div className="alert alert-danger rounded-3 small">
-                <i className="bi bi-exclamation-octagon-fill me-2"></i>
-                Service unavailable. Please try again later.
+              <div className="bg-danger text-white p-3 fw-bold text-uppercase small">
+                Service unavailable.
               </div>
             )}
           </div>
         </div>
       </Modal.Body>
 
-      <Modal.Footer className="border-0 pt-0">
-        <Button variant="link" className="text-muted text-decoration-none small" onClick={handleClose}>
-          Back to Shopping
+      <Modal.Footer className="border-0 bg-white justify-content-start pb-4">
+        <Button variant="link" className="text-dark fw-black text-uppercase small text-decoration-underline p-0 ms-4" onClick={handleClose}>
+          Cancel
         </Button>
       </Modal.Footer>
+
+      <style>{`
+        .adidas-modal .modal-content { border-radius: 0px !important; border: none; }
+        .fw-black { font-weight: 900 !important; }
+        .Oswald-font { font-family: 'Oswald', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+      `}</style>
     </Modal>
   );
 };

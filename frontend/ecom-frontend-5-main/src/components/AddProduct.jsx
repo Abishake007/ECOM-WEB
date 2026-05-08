@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import API from "../axios";
-import { Container, Row, Col, Card, Form, Button, InputGroup } from "react-bootstrap";
+import { Container, Row, Col, Form, Button } from "react-bootstrap";
 
 const AddProduct = () => {
   const [product, setProduct] = useState({
@@ -11,10 +11,11 @@ const AddProduct = () => {
     category: "",
     stockQuantity: "",
     releaseDate: "",
-    productAvailable: false,
+    productAvailable: true,
   });
-  const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+
+  const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -22,216 +23,194 @@ const AddProduct = () => {
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setImage(file);
-    if (file) {
-      setImagePreview(URL.createObjectURL(file));
-    }
+    const files = Array.from(e.target.files);
+    setImages(files);
+    const previews = files.map((file) => URL.createObjectURL(file));
+    setImagePreviews(previews);
   };
 
   const submitHandler = (event) => {
     event.preventDefault();
+    if (images.length === 0) return alert("Please upload at least one product image");
+
     const formData = new FormData();
-    formData.append("imageFile", image);
+    images.forEach((file) => {
+      formData.append("imageFiles", file);
+    });
+
     formData.append(
       "product",
       new Blob([JSON.stringify(product)], { type: "application/json" })
     );
 
     API.post("/product", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+      headers: { "Content-Type": "multipart/form-data" },
     })
-      .then((response) => {
-        alert("Product added successfully");
-        // Reset form
+      .then(() => {
+        alert("LISTING SUCCESSFUL");
         setProduct({
           name: "", brand: "", description: "", price: "",
-          category: "", stockQuantity: "", releaseDate: "", productAvailable: false
+          category: "", stockQuantity: "", releaseDate: "", productAvailable: true
         });
-        setImage(null);
-        setImagePreview(null);
+        setImages([]);
+        setImagePreviews([]);
       })
-      .catch((error) => {
-        console.error("Error adding product:", error);
-        alert("Error adding product");
+      .catch((err) => {
+        console.error(err);
+        alert("UPLOAD FAILED");
       });
   };
 
   return (
-    <div className="add-product-wrapper" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh", paddingTop: "100px", paddingBottom: "50px" }}>
+    <div className="add-product-container bg-white" style={{ minHeight: "100vh", paddingTop: "140px", paddingBottom: "80px" }}>
       <Container>
-        <Row className="justify-content-center">
-          <Col lg={8}>
-            <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
-              <div className="card-header bg-primary text-white p-4 text-center border-0" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
-                <h3 className="fw-bold mb-0">Inventory Enrollment</h3>
-                <p className="small mb-0 opacity-75">Add a new item to your enterprise catalog</p>
-              </div>
-              <Card.Body className="p-4 p-lg-5">
-                <Form onSubmit={submitHandler}>
-                  <Row className="g-4">
-                    <Col md={6}>
-                      <Form.Group controlId="name">
-                        <Form.Label className="fw-bold small text-uppercase text-muted">Product Name</Form.Label>
-                        <Form.Control
-                          type="text"
-                          placeholder="e.g. MacBook Pro M3"
-                          name="name"
-                          value={product.name}
-                          onChange={handleInputChange}
-                          className="py-2 rounded-3 border-light bg-light"
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
+        <div className="border-bottom border-dark pb-3 mb-5">
+          <h1 className="fw-black text-uppercase mb-0 Oswald-font" style={{ fontSize: "2.5rem", letterSpacing: "1.5px" }}>
+            New Listing
+          </h1>
+          <span className="fw-bold text-muted small Oswald-font text-uppercase">Merchant Inventory Entry</span>
+        </div>
 
-                    <Col md={6}>
-                      <Form.Group controlId="brand">
-                        <Form.Label className="fw-bold small text-uppercase text-muted">Manufacturer/Brand</Form.Label>
-                        <Form.Control
-                          type="text"
-                          placeholder="e.g. Apple"
-                          name="brand"
-                          value={product.brand}
-                          onChange={handleInputChange}
-                          className="py-2 rounded-3 border-light bg-light"
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
+        <Form onSubmit={submitHandler}>
+          <Row className="g-5">
+            {/* Primary Details */}
+            <Col lg={8}>
+              <div className="border border-dark p-4 p-lg-5">
+                <h5 className="fw-black text-uppercase Oswald-font mb-4" style={{ letterSpacing: '1px' }}>General Information</h5>
+                
+                <Form.Group className="mb-4">
+                  <Form.Label className="Oswald-font fw-bold text-uppercase small">Product Name</Form.Label>
+                  <Form.Control 
+                    type="text" 
+                    name="name" 
+                    className="rounded-0 border-dark shadow-none py-2" 
+                    value={product.name} 
+                    onChange={handleInputChange} 
+                    placeholder="E.G. SUPERSTAR CLASSIC" 
+                    required 
+                  />
+                </Form.Group>
 
-                    <Col xs={12}>
-                      <Form.Group controlId="description">
-                        <Form.Label className="fw-bold small text-uppercase text-muted">Full Description</Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          rows={3}
-                          placeholder="Provide detailed product specifications..."
-                          name="description"
-                          value={product.description}
-                          onChange={handleInputChange}
-                          className="py-2 rounded-3 border-light bg-light"
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
-
-                    <Col md={4}>
-                      <Form.Group controlId="price">
-                        <Form.Label className="fw-bold small text-uppercase text-muted">Listing Price</Form.Label>
-                        <InputGroup>
-                          <InputGroup.Text className="bg-light border-light">$</InputGroup.Text>
-                          <Form.Control
-                            type="number"
-                            name="price"
-                            value={product.price}
-                            onChange={handleInputChange}
-                            className="py-2 border-light bg-light"
-                            required
-                          />
-                        </InputGroup>
-                      </Form.Group>
-                    </Col>
-
-                    <Col md={4}>
-                      <Form.Group controlId="category">
-                        <Form.Label className="fw-bold small text-uppercase text-muted">Category</Form.Label>
-                        <Form.Select
-                          name="category"
-                          value={product.category}
-                          onChange={handleInputChange}
-                          className="py-2 rounded-3 border-light bg-light"
-                          required
-                        >
-                          <option value="">Select</option>
-                          <option value="Laptop">Laptop</option>
-                          <option value="Headphone">Headphone</option>
-                          <option value="Mobile">Mobile</option>
-                          <option value="Electronics">Electronics</option>
-                          <option value="Toys">Toys</option>
-                          <option value="Fashion">Fashion</option>
-                        </Form.Select>
-                      </Form.Group>
-                    </Col>
-
-                    <Col md={4}>
-                      <Form.Group controlId="stockQuantity">
-                        <Form.Label className="fw-bold small text-uppercase text-muted">Stock Level</Form.Label>
-                        <Form.Control
-                          type="number"
-                          name="stockQuantity"
-                          value={product.stockQuantity}
-                          onChange={handleInputChange}
-                          className="py-2 rounded-3 border-light bg-light"
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
-
-                    <Col md={6}>
-                      <Form.Group controlId="releaseDate">
-                        <Form.Label className="fw-bold small text-uppercase text-muted">Release Date</Form.Label>
-                        <Form.Control
-                          type="date"
-                          name="releaseDate"
-                          value={product.releaseDate}
-                          onChange={handleInputChange}
-                          className="py-2 rounded-3 border-light bg-light"
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
-
-                    <Col md={6}>
-                      <Form.Group controlId="image">
-                        <Form.Label className="fw-bold small text-uppercase text-muted">Product Image</Form.Label>
-                        <Form.Control
-                          type="file"
-                          onChange={handleImageChange}
-                          className="py-2 rounded-3 border-light bg-light"
-                          required={!imagePreview}
-                        />
-                      </Form.Group>
-                    </Col>
-
-                    {imagePreview && (
-                      <Col xs={12} className="text-center">
-                        <div className="p-3 border rounded-4 bg-light d-inline-block">
-                          <img src={imagePreview} alt="Preview" style={{ maxHeight: "150px" }} className="rounded-3 shadow-sm" />
-                          <p className="small text-muted mt-2 mb-0">Image Preview</p>
-                        </div>
-                      </Col>
-                    )}
-
-                    <Col xs={12}>
-                      <Form.Check 
-                        type="switch"
-                        id="productAvailable"
-                        label="Publish to storefront immediately"
-                        checked={product.productAvailable}
-                        onChange={(e) => setProduct({ ...product, productAvailable: e.target.checked })}
-                        className="fw-bold text-muted"
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="mb-4">
+                      <Form.Label className="Oswald-font fw-bold text-uppercase small">Brand</Form.Label>
+                      <Form.Control 
+                        type="text" 
+                        name="brand" 
+                        className="rounded-0 border-dark shadow-none py-2" 
+                        value={product.brand} 
+                        onChange={handleInputChange} 
+                        required 
                       />
-                    </Col>
-
-                    <Col xs={12} className="pt-3">
-                      <Button 
-                        type="submit" 
-                        className="w-100 py-3 rounded-pill fw-bold shadow-sm"
-                        style={{ background: "#764ba2", border: "none" }}
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group className="mb-4">
+                      <Form.Label className="Oswald-font fw-bold text-uppercase small">Category</Form.Label>
+                      <Form.Select 
+                        name="category" 
+                        className="rounded-0 border-dark shadow-none py-2" 
+                        value={product.category} 
+                        onChange={handleInputChange} 
+                        required
                       >
-                        Finalize & Upload Product
-                      </Button>
-                    </Col>
-                  </Row>
-                </Form>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+                        <option value="">SELECT CATEGORY</option>
+                        <option value="Mobile">MOBILE</option>
+                        <option value="Laptop">LAPTOP</option>
+                        <option value="Electronics">ELECTRONICS</option>
+                        <option value="Fashion">FASHION & APPAREL</option>
+                        <option value="Fashion">CAMERA</option>
+                        <option value="Fashion">HOME APPLIENCE</option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                <Form.Group className="mb-0">
+                  <Form.Label className="Oswald-font fw-bold text-uppercase small">Description</Form.Label>
+                  <Form.Control 
+                    as="textarea" 
+                    rows={6} 
+                    name="description" 
+                    className="rounded-0 border-dark shadow-none py-3" 
+                    value={product.description} 
+                    onChange={handleInputChange} 
+                    placeholder="TECHNICAL SPECIFICATIONS AND PRODUCT HIGHLIGHTS..." 
+                    required 
+                  />
+                </Form.Group>
+              </div>
+            </Col>
+
+            {/* Assets & Logistics */}
+            <Col lg={4}>
+              <div className="d-flex flex-column gap-4">
+                {/* Image Upload Block */}
+                <div className="border border-dark p-4 bg-light">
+                  <h5 className="fw-black text-uppercase Oswald-font mb-3 small">Gallery Assets</h5>
+                  <Form.Control 
+                    type="file" 
+                    size="sm" 
+                    className="rounded-0 border-dark shadow-none bg-white mb-3" 
+                    onChange={handleImageChange} 
+                    multiple 
+                    accept="image/*"
+                    required 
+                  />
+                  <div className="d-flex flex-wrap gap-2 mt-2">
+                    {imagePreviews.map((src, index) => (
+                      <div key={index} className="border border-dark bg-white p-1">
+                        <img src={src} alt="Preview" style={{ width: "50px", height: "50px", objectFit: "cover" }} />
+                      </div>
+                    ))}
+                    {imagePreviews.length === 0 && <div className="py-4 w-100 text-center text-muted border border-dashed border-dark opacity-50 small fw-bold">NO ASSETS SELECTED</div>}
+                  </div>
+                </div>
+
+                {/* Pricing & Stock Block */}
+                <div className="border border-dark p-4">
+                  <h5 className="fw-black text-uppercase Oswald-font mb-3 small">Logistics</h5>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="Oswald-font fw-bold text-uppercase" style={{ fontSize: '10px' }}>Price (INR)</Form.Label>
+                    <Form.Control type="number" name="price" className="rounded-0 border-dark shadow-none" value={product.price} onChange={handleInputChange} required />
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="Oswald-font fw-bold text-uppercase" style={{ fontSize: '10px' }}>Quantity</Form.Label>
+                    <Form.Control type="number" name="stockQuantity" className="rounded-0 border-dark shadow-none" value={product.stockQuantity} onChange={handleInputChange} required />
+                  </Form.Group>
+                  <Form.Group className="mb-4">
+                    <Form.Label className="Oswald-font fw-bold text-uppercase" style={{ fontSize: '10px' }}>Launch Date</Form.Label>
+                    <Form.Control type="date" name="releaseDate" className="rounded-0 border-dark shadow-none" value={product.releaseDate} onChange={handleInputChange} required />
+                  </Form.Group>
+
+                  <Form.Check 
+                    type="switch" 
+                    label="ACTIVATE ON STOREFRONT" 
+                    className="Oswald-font fw-black small text-uppercase"
+                    checked={product.productAvailable} 
+                    onChange={(e) => setProduct({...product, productAvailable: e.target.checked})}
+                  />
+                </div>
+
+                <Button type="submit" variant="dark" className="w-100 py-3 rounded-0 Oswald-font fw-black text-uppercase shadow-none border-0" style={{ letterSpacing: '2px' }}>
+                  Confirm & List Item <i className="bi bi-arrow-right ms-2"></i>
+                </Button>
+              </div>
+            </Col>
+          </Row>
+        </Form>
       </Container>
+
+      <style>{`
+        .fw-black { font-weight: 900 !important; }
+        .Oswald-font { font-family: 'Oswald', sans-serif; }
+        .form-control:focus, .form-select:focus {
+          border-color: #000 !important;
+          background-color: #fff !important;
+        }
+        .border-dashed { border-style: dashed !important; }
+      `}</style>
     </div>
   );
 };
