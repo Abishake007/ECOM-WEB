@@ -1,86 +1,201 @@
-# 🛒 ECOM-WEB – Full Stack E-Commerce Web Application
+# ECOM-WEB – Full Stack E-Commerce Application
 
-ECOM-WEB is a full-stack e-commerce web application built using **React + Vite** for the frontend and **Spring Boot** for the backend.  
-Both frontend and backend are managed and run inside **VS Code**, following a clean and scalable project structure.
+A comprehensive e-commerce web application built with React + Vite (frontend) and Spring Boot (backend). Includes product management, user authentication with JWT, shopping cart, wishlists, order processing, and Stripe payment integration.
 
----
+## Overview
 
-## 📌 Project Overview
+- **Frontend**: React with Vite, Bootstrap styling
+- **Backend**: Spring Boot REST APIs with JWT security and role-based access control
+- **Database**: MySQL
+- **Payment**: Stripe integration
+- **Authentication**: JWT token-based with RBAC
 
-This project demonstrates a real-world **full-stack web application architecture**:
-- Frontend handles UI and user interactions
-- Backend exposes REST APIs and business logic
-- MySQL is used for persistent data storage
-- Frontend and backend communicate using **JSON-based REST APIs**
+## Features
 
----
+**User Features**
+- User registration and authentication
+- Browse and search products with category filtering
+- Product details with image gallery
+- Shopping cart with quantity management
+- Persistent cart storage
+- Wishlist functionality
+- Order history and tracking
 
-## 🧱 Tech Stack
+**Admin Features**
+- Admin dashboard with control panel
+- Product inventory management (CRUD)
+- Multi-image product uploads
+- Stock quantity tracking
+- User management
+- Order management and tracking
 
-### Frontend
-- React
-- Vite
-- Bootstrap
-- HTML5
-- CSS3
-- JavaScript (ES6+)
-- ESLint
-- Hot Module Replacement (HMR)
+**Checkout & Payment**
+- Secure checkout process
+- Stripe payment integration
+- Address validation and collection
+- Promo code support
+- Order confirmation and email notifications
 
-**Vite Plugins**
-- `@vitejs/plugin-react` (Babel – Fast Refresh)
-- OR `@vitejs/plugin-react-swc` (SWC – Fast Refresh)
+**Security**
+- JWT token-based authentication
+- BCrypt password encoding
+- Role-based access control (ADMIN, MODERATOR, USER)
+- Protected API endpoints
+- Email and username validation
 
----
+## Tech Stack
 
-### Backend
-- Java
-- Spring Boot
-- REST API
-- Maven
+**Frontend**: React 18+, Vite, Bootstrap, Axios, Stripe.js
 
----
+**Backend**: Java 11+, Spring Boot, Spring Security (JWT), Spring Data JPA, Hibernate, Maven
 
-### Database
-- MySQL
+**Database**: MySQL 5.7+
 
----
+## Setup Instructions
 
-## 📁 Project Structure
+### Prerequisites
+- Java 11 or higher
+- Node.js 14+ and npm
+- MySQL Server
+- Git
 
+### Database Setup
 
----
-
-## ⚙️ How to Run the Project
-
-### ▶ Database Setup (MySQL)
-
-1. Start MySQL server
-2. Create database:
+Create the database:
 ```sql
 CREATE DATABASE ecom_web;
+```
 
-Open terminal and navigate:
-cd backend
+### Backend Setup
 
-Configure application.properties:
+1. Navigate to backend:
+```bash
+cd backend/ecom-proj
+```
+
+2. Configure `src/main/resources/application.properties`:
+```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/ecom_web
-spring.datasource.username=your_username
+spring.datasource.username=root
 spring.datasource.password=your_password
-
 spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
+```
 
-## Run backend
+3. Run the backend:
+```bash
 mvn spring-boot:run
+```
 
-## ▶ Frontend (React + Vite)
-cd frontend
+Backend runs on `http://localhost:8080`
+
+### Frontend Setup
+
+1. Navigate to frontend:
+```bash
+cd frontend/ecom-frontend-5-main
+```
+
+2. Install dependencies:
+```bash
 npm install
-npm run dev
+```
 
-Sample REST Endpoints
-GET    /api/products
-POST   /api/products
-PUT    /api/products/{id}
-DELETE /api/products/{id}
+3. Start development server:
+```bash
+npm run dev
+```
+
+Frontend runs on `http://localhost:5173`
+
+## API Endpoints
+
+**Authentication**
+- `POST /api/auth/signup` - Register new user
+- `POST /api/auth/signin` - User login
+
+**Products**
+- `GET /api/products` - Get all products
+- `GET /api/product/{id}` - Get product details
+- `GET /api/product/{productId}/image` - Get product image
+- `GET /api/products/search?keyword={value}` - Search products
+- `POST /api/product` - Add product (Auth required)
+- `PUT /api/product/{id}` - Update product (Auth required)
+- `DELETE /api/product/{id}` - Delete product (Admin only)
+
+**Wishlist**
+- `POST /api/wishlist/add/{productId}` - Add to wishlist
+- `GET /api/wishlist` - Get user's wishlist
+- `DELETE /api/wishlist/remove/{productId}` - Remove from wishlist
+
+**Orders**
+- `POST /api/orders` - Create order (Auth required)
+- `GET /api/orders/user` - Get user's orders
+- `GET /api/admin/orders` - Get all orders (Admin only)
+
+**Payment**
+- `POST /api/payment/create-payment-intent` - Create Stripe payment intent
+
+**Admin**
+- `GET /api/admin/users` - List all users (Admin only)
+
+## Authentication
+
+JWT token-based authentication with role-based access control (ADMIN, MODERATOR, USER):
+
+1. User authenticates via `/api/auth/signin` or `/api/auth/signup`
+2. Server returns JWT token
+3. Client includes token in `Authorization: Bearer <token>` header
+4. Server validates token before processing request
+
+## Schreenshots
+
+### Home Page
+![Homepage](./homepage.png)
+
+### Product Management
+![Add Product](./addproduct.png)
+![Admin Products](./adminproduct.png)
+
+### User Management
+![Admin Users](./adminusers.png)
+
+### Shopping Features
+![Cart](./cart.png)
+![Wishlist](./wishlist.png)
+
+### Authentication & Payment
+![Login](./login.png)
+![Payment](./payment.png)
+
+## Development
+
+**Frontend Commands**
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run preview  # Preview build
+```
+
+**Backend Commands**
+```bash
+mvn clean                # Clean build
+mvn spring-boot:run      # Run application
+mvn test                 # Run tests
+```
+
+## Common Issues
+
+**Backend won't start**
+- Verify MySQL is running and database exists
+- Check database credentials in application.properties
+- Ensure Java 11+ is installed
+
+**Frontend won't start**
+- Run `npm install` again if dependencies are missing
+- Ensure Node.js version is 14+
+- Clear npm cache: `npm cache clean --force`
+
+**Database connection error**
+- Verify MySQL service is running
+- Check database URL and credentials
+- Ensure database `ecom_web` exists
