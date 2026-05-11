@@ -2,6 +2,16 @@
 
 A comprehensive e-commerce web application built with React + Vite (frontend) and Spring Boot (backend). Includes product management, user authentication with JWT, shopping cart, wishlists, order processing, and Stripe payment integration.
 
+## Live Demo
+
+<p align="center">
+  <a href="https://ecom-web-vert.vercel.app/">
+    <img src="homepage.png" width="900" alt="Click to View Live Demo" style="border-radius: 8px;">
+  </a>
+  <br>
+  <em><strong>Click the image above to view the live portal</strong></em>
+</p>
+
 ## Overview
 
 - **Frontend**: React with Vite, Bootstrap styling
