@@ -1,6 +1,6 @@
-import axios from "axios";
+import API from "../axios";
 
-const API_URL = "http://localhost:8080/api/auth/";
+const API_URL = "/auth/";
 
 const register = (username, email, password) => {
   return axios.post(API_URL + "signup", {
@@ -12,7 +12,7 @@ const register = (username, email, password) => {
 
 // services/auth.service.js
 const login = (username, password) => {
-  return axios
+  return API
     .post(API_URL + "signin", { username, password })
     .then((response) => {
       // 1. Check if the response actually exists
