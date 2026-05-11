@@ -37,7 +37,7 @@ const Navbar = ({ onSelectCategory }) => {
     }
   };
 
-  const categories = ["Laptop", "Headphone", "Mobile", "Electronics", "Toys", "Fashion"];
+  const categories = ["Laptop", "Camera", "Mobile", "Electronics", "Toys", "Fashion"];
   const showAdminBoard = currentUser && currentUser.roles?.includes("ROLE_ADMIN");
 
   return (

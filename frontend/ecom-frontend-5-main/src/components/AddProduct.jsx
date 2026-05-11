@@ -120,8 +120,9 @@ const AddProduct = () => {
                         <option value="Laptop">LAPTOP</option>
                         <option value="Electronics">ELECTRONICS</option>
                         <option value="Fashion">FASHION & APPAREL</option>
-                        <option value="Fashion">CAMERA</option>
-                        <option value="Fashion">HOME APPLIENCE</option>
+                        <option value="Camera">CAMERA</option>
+                        <option value="Toys">TOYS</option>
+                        <option value="Home_applience">HOME APPLIENCE</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>

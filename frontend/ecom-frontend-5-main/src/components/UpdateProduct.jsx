@@ -170,6 +170,7 @@ const UpdateProduct = () => {
                         <option value="mobile">MOBILE</option>
                         <option value="electronics">ELECTRONICS</option>
                         <option value="fashion">FASHION & APPAREL</option>
+                         <option value="camera">CAMERA</option>
                         <option value="toys">TOYS</option>
                         <option value="home">HOME & KITCHEN</option>
                       </Form.Select>
