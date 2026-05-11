@@ -42,7 +42,7 @@ const Navbar = ({ onSelectCategory }) => {
 
   return (
     <header className="fixed-top adidas-nav bg-white shadow-sm">
-      {/* Top Utility Bar: Clean & Minimalist */}
+      {/* Top Utility Bar */}
       <div className="nav-utility d-flex justify-content-end px-4 py-1 border-bottom bg-white">
         <div className="d-flex gap-4 small fw-bold text-uppercase" style={{ fontSize: '10px', letterSpacing: '1.5px' }}>
           {currentUser ? (
@@ -56,14 +56,13 @@ const Navbar = ({ onSelectCategory }) => {
         </div>
       </div>
 
-      {/* Main Navbar: Bold Branding & Centered Nav */}
+      {/* Main Navbar Row */}
       <div className="nav-main d-flex align-items-center justify-content-between px-4 py-3 bg-white">
-        {/* Brand Logo - Bold & Black */}
         <Link className="navbar-brand text-dark fw-black mb-0" to="/" style={{ fontSize: '28px', letterSpacing: '-1.5px' }}>
           ECOMWEB
         </Link>
 
-        {/* Categories: Lifestyle Navigation */}
+        {/* Desktop Categories */}
         <nav className="d-none d-lg-flex gap-5">
           {categories.map(cat => (
             <span 
@@ -76,9 +75,8 @@ const Navbar = ({ onSelectCategory }) => {
           ))}
         </nav>
 
-        {/* Actions: Search & Cart */}
         <div className="d-flex align-items-center gap-4">
-          {/* Minimalist Search Box */}
+          {/* Desktop Search Box */}
           <div className="position-relative d-none d-md-block">
             <div className="search-input-container">
               <input
@@ -104,13 +102,39 @@ const Navbar = ({ onSelectCategory }) => {
             )}
           </div>
 
-          {/* Cart Icon: The Shopping Bag */}
           <Link to="/cart" className="text-dark text-decoration-none position-relative ms-2">
             <i className="bi bi-bag fs-4 fw-bold"></i>
             {cart.length > 0 && (
               <span className="adidas-cart-badge">{cart.length}</span>
             )}
           </Link>
+        </div>
+      </div>
+
+      {/* Mobile Search Row - Positioned outside to prevent layout overlap */}
+      <div className="d-md-none px-4 pb-3 bg-white">
+        <div className="search-input-container position-relative w-100">
+          <input
+            type="text"
+            className="adidas-search-input w-100"
+            placeholder="SEARCH"
+            value={input}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
+          <i className="bi bi-search search-icon"></i>
+
+          {/* Mobile Search Results */}
+          {showSearchResults && (
+            <div className="adidas-search-dropdown shadow-lg position-absolute start-0 w-100 mt-1 bg-white border p-2" style={{ zIndex: 1000 }}>
+              {searchResults.length > 0 ? (
+                searchResults.map(result => (
+                  <Link key={result.id} to={`/product/${result.id}`} className="search-item d-block p-2 text-dark text-decoration-none" onClick={() => setShowSearchResults(false)}>
+                    {result.name}
+                  </Link>
+                ))
+              ) : <div className="p-3 small text-muted text-center fw-bold">NO RESULTS FOUND</div>}
+            </div>
+          )}
         </div>
       </div>
     </header>
