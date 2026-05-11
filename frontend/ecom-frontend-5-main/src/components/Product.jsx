@@ -27,7 +27,7 @@ const Product = () => {
 
         if (productData.gallery && productData.gallery.length > 0) {
           const galleryUrls = productData.gallery.map(img => 
-            `http://localhost:8080/api/product/image/${img.id}`
+            `${API.defaults.baseURL}/product/image/${img.id}`
           );
           setGallery([primaryUrl, ...galleryUrls]);
         } else {
