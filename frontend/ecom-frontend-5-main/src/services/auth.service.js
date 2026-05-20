@@ -3,14 +3,14 @@ import API from "../axios";
 const API_URL = "/auth/";
 
 const register = (username, email, password) => {
-  return axios.post(API_URL + "signup", {
+  // FIXED: Changed axios.post to API.post to use your Render instance config
+  return API.post(API_URL + "signup", {
     username,
     email,
     password,
   });
 };
 
-// services/auth.service.js
 const login = (username, password) => {
   return API
     .post(API_URL + "signin", { username, password })
