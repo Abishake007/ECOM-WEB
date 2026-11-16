@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../axios";
 import { Container, Row, Col, Form, Button, Spinner } from "react-bootstrap";
+import AppContext from "../Context/Context";
 
 const UpdateProduct = () => {
+  const { notify } = useContext(AppContext);
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -65,12 +67,12 @@ const UpdateProduct = () => {
       headers: { "Content-Type": "multipart/form-data" },
     })
     .then(() => {
-      alert("PRODUCT REVISION SUCCESSFUL");
+      notify("Product updated successfully");
       navigate("/admin/products");
     })
     .catch((error) => {
       console.error("Error updating product:", error);
-      alert("FAILED TO SYNC CHANGES");
+      notify("Could not update the product. Please try again.", "error");
     });
   };
 

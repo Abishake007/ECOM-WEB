@@ -5,7 +5,7 @@ import AuthService from "../services/auth.service";
 import AppContext from "../Context/Context";
 
 const Navbar = ({ onSelectCategory }) => {
-  const { cart } = useContext(AppContext);
+  const { cart, data } = useContext(AppContext);
   const navigate = useNavigate();
 
   const [input, setInput] = useState("");
@@ -29,7 +29,7 @@ const Navbar = ({ onSelectCategory }) => {
     if (value.length >= 1) {
       setShowSearchResults(true);
       try {
-        const response = await API.get(`/products/search?keyword=${value}`);
+        const response = await API.get(`/products/search?keyword=${encodeURIComponent(value)}`);
         setSearchResults(response.data);
       } catch (error) { console.error("Search Error:", error); }
     } else {
@@ -37,7 +37,16 @@ const Navbar = ({ onSelectCategory }) => {
     }
   };
 
-  const categories = ["Laptop", "Camera", "Mobile", "Electronics", "Toys", "Fashion"];
+  const categoryLabels = new Map();
+  (data || []).forEach(product => {
+    const label = product.category?.trim();
+    if (label) {
+      const key = label.toLocaleLowerCase();
+      categoryLabels.set(key, key === "toys" ? "Toys" : (categoryLabels.get(key) || label));
+    }
+  });
+  categoryLabels.set("toys", "Toys");
+  const categories = [...categoryLabels.values()].sort((a, b) => a.localeCompare(b));
   const showAdminBoard = currentUser && currentUser.roles?.includes("ROLE_ADMIN");
 
   return (
@@ -57,25 +66,25 @@ const Navbar = ({ onSelectCategory }) => {
       </div>
 
       {/* Main Navbar Row */}
-      <div className="nav-main d-flex align-items-center justify-content-between px-4 py-3 bg-white">
-        <Link className="navbar-brand text-dark fw-black mb-0" to="/" style={{ fontSize: '28px', letterSpacing: '-1.5px' }}>
+      <div className="nav-main d-flex align-items-center justify-content-between gap-4 px-4 py-3 bg-white">
+        <Link className="navbar-brand text-dark fw-black mb-0" to="/" onClick={() => onSelectCategory("")} style={{ fontSize: '28px', letterSpacing: '-1.5px' }}>
           ECOMWEB
         </Link>
 
-        {/* Desktop Categories */}
-        <nav className="d-none d-lg-flex gap-5">
+        <nav className="category-nav d-flex align-items-center gap-4 flex-grow-1" aria-label="Product categories">
           {categories.map(cat => (
-            <span 
-              key={cat} 
-              className="adidas-link fw-bold text-uppercase cursor-pointer"
-              onClick={() => onSelectCategory(cat)}
+            <button
+              key={cat}
+              type="button"
+              className="adidas-link category-link fw-bold text-uppercase"
+              onClick={() => { onSelectCategory(cat); navigate("/"); }}
             >
               {cat}
-            </span>
+            </button>
           ))}
         </nav>
 
-        <div className="d-flex align-items-center gap-4">
+        <div className="nav-actions d-flex align-items-center gap-4">
           {/* Desktop Search Box */}
           <div className="position-relative d-none d-md-block">
             <div className="search-input-container">

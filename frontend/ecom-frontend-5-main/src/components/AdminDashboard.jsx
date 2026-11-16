@@ -29,6 +29,16 @@ const AdminDashboard = () => {
               </div>
 
               <Nav className="flex-column">
+                <Nav.Link
+                  as={Link}
+                  to="/admin"
+                  className={`d-flex align-items-center mb-1 px-3 py-3 border border-dark Oswald-font fw-black text-uppercase shadow-none transition-all ${location.pathname === '/admin' ? 'bg-dark text-white' : 'bg-white text-dark hover-gray'}`}
+                  style={{ borderRadius: '0px', letterSpacing: '1px', fontSize: '13px' }}
+                >
+                  <i className="bi bi-speedometer2 me-3 fs-5"></i>
+                  <span>Overview</span>
+                </Nav.Link>
+
                 <Nav.Link 
                   as={Link} 
                   to="/admin/orders" 

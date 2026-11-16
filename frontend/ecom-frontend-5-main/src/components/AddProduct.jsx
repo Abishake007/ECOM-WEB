@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import API from "../axios";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
+import AppContext from "../Context/Context";
 
 const AddProduct = () => {
+  const { notify } = useContext(AppContext);
   const [product, setProduct] = useState({
     name: "",
     brand: "",
@@ -31,7 +33,7 @@ const AddProduct = () => {
 
   const submitHandler = (event) => {
     event.preventDefault();
-    if (images.length === 0) return alert("Please upload at least one product image");
+    if (images.length === 0) return notify("Please upload at least one product image", "error");
 
     const formData = new FormData();
     images.forEach((file) => {
@@ -47,7 +49,7 @@ const AddProduct = () => {
       headers: { "Content-Type": "multipart/form-data" },
     })
       .then(() => {
-        alert("LISTING SUCCESSFUL");
+        notify("Product listing created successfully");
         setProduct({
           name: "", brand: "", description: "", price: "",
           category: "", stockQuantity: "", releaseDate: "", productAvailable: true
@@ -57,7 +59,7 @@ const AddProduct = () => {
       })
       .catch((err) => {
         console.error(err);
-        alert("UPLOAD FAILED");
+        notify("Product upload failed. Please try again.", "error");
       });
   };
 

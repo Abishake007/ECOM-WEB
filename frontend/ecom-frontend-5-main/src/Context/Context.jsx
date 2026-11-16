@@ -16,6 +16,13 @@ export const AppProvider = ({ children }) => {
   const [data, setData] = useState([]);
   const [isError, setIsError] = useState("");
   const [cart, setCart] = useState(JSON.parse(localStorage.getItem('cart')) || []);
+  const [notification, setNotification] = useState(null);
+
+  const notify = (message, type = "success") => {
+    const id = Date.now();
+    setNotification({ message, type, id });
+    window.setTimeout(() => setNotification(current => current?.id === id ? null : current), 4000);
+  };
 
 
   const addToCart = (product) => {
@@ -63,11 +70,11 @@ const deleteProduct = async (id) => {
     // Update the state so the product disappears from the Admin screen
     setData(prevData => prevData.filter(product => product.id !== id));
     
-    alert("Product deleted successfully");
+    notify("Product deleted successfully");
   } catch (error) {
     console.error("Delete error:", error);
     if (error.response?.status === 403) {
-        alert("Access Denied: Your account does not have Admin privileges.");
+        notify("Access denied. Your account does not have admin privileges.", "error");
     }
   }
 };
@@ -95,10 +102,22 @@ const deleteProduct = async (id) => {
         removeFromCart, 
         refreshData, 
         clearCart,
-        deleteProduct 
+        deleteProduct,
+        notify
       }}
     >
       {children}
+      {notification && (
+        <div className={`app-notification app-notification-${notification.type}`} role="status" aria-live="polite">
+          <span className="app-notification-icon" aria-hidden="true">
+            <i className={`bi ${notification.type === "error" ? "bi-exclamation-circle-fill" : "bi-check-circle-fill"}`} />
+          </span>
+          <span className="app-notification-message">{notification.message}</span>
+          <button type="button" className="app-notification-close" aria-label="Dismiss notification" onClick={() => setNotification(null)}>
+            <i className="bi bi-x-lg" />
+          </button>
+        </div>
+      )}
     </AppContext.Provider>
   );
 };

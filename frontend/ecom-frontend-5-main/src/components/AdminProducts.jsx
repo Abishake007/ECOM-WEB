@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import AppContext from "../Context/Context";
 import { Link } from "react-router-dom";
 import unplugged from "../assets/unplugged.png";
@@ -6,6 +6,37 @@ import { Table, Badge } from 'react-bootstrap';
 
 const AdminProducts = () => {
     const { data, deleteProduct } = useContext(AppContext);
+    const [search, setSearch] = useState("");
+    const [category, setCategory] = useState("");
+    const [sortBy, setSortBy] = useState("name-asc");
+
+    const categoryLabels = new Map();
+    data.forEach(product => {
+        const label = product.category?.trim();
+        if (label) categoryLabels.set(label.toLocaleLowerCase(), categoryLabels.get(label.toLocaleLowerCase()) || label);
+    });
+    const categories = [...categoryLabels.values()].sort((a, b) => a.localeCompare(b));
+
+    const visibleProducts = useMemo(() => {
+        const query = search.trim().toLocaleLowerCase();
+        return data
+            .filter(product => {
+                const matchesSearch = !query || [product.name, product.brand, product.category]
+                    .some(value => value?.toLocaleLowerCase().includes(query));
+                const matchesCategory = !category || product.category?.trim().toLocaleLowerCase() === category.toLocaleLowerCase();
+                return matchesSearch && matchesCategory;
+            })
+            .sort((a, b) => {
+                switch (sortBy) {
+                    case "name-desc": return (b.name || "").localeCompare(a.name || "");
+                    case "category-asc": return (a.category || "").localeCompare(b.category || "") || (a.name || "").localeCompare(b.name || "");
+                    case "price-asc": return Number(a.price || 0) - Number(b.price || 0);
+                    case "price-desc": return Number(b.price || 0) - Number(a.price || 0);
+                    case "stock-asc": return Number(a.stockQuantity || 0) - Number(b.stockQuantity || 0);
+                    default: return (a.name || "").localeCompare(b.name || "");
+                }
+            });
+    }, [data, search, category, sortBy]);
 
     const handleDelete = (id) => {
         if (window.confirm("CONFIRM DELETION: This action will permanently remove the item from inventory and customer wishlists.")) {
@@ -31,6 +62,38 @@ const AdminProducts = () => {
                 </Link>
             </div>
 
+            <div className="row g-2 align-items-end mb-3">
+                <div className="col-12 col-md-5">
+                    <label htmlFor="inventory-search" className="form-label small fw-bold text-uppercase Oswald-font">Search products</label>
+                    <div className="input-group">
+                        <span className="input-group-text bg-white border-dark rounded-0"><i className="bi bi-search" /></span>
+                        <input id="inventory-search" type="search" className="form-control border-dark rounded-0" placeholder="Name, brand, or category" value={search} onChange={event => setSearch(event.target.value)} />
+                    </div>
+                </div>
+                <div className="col-6 col-md-3">
+                    <label htmlFor="inventory-category" className="form-label small fw-bold text-uppercase Oswald-font">Category</label>
+                    <select id="inventory-category" className="form-select border-dark rounded-0" value={category} onChange={event => setCategory(event.target.value)}>
+                        <option value="">All categories</option>
+                        {categories.map(item => <option key={item} value={item}>{item}</option>)}
+                    </select>
+                </div>
+                <div className="col-6 col-md-4">
+                    <label htmlFor="inventory-sort" className="form-label small fw-bold text-uppercase Oswald-font">Sort by</label>
+                    <select id="inventory-sort" className="form-select border-dark rounded-0" value={sortBy} onChange={event => setSortBy(event.target.value)}>
+                        <option value="name-asc">Name: A to Z</option>
+                        <option value="name-desc">Name: Z to A</option>
+                        <option value="category-asc">Category</option>
+                        <option value="price-asc">Price: low to high</option>
+                        <option value="price-desc">Price: high to low</option>
+                        <option value="stock-asc">Stock: low to high</option>
+                    </select>
+                </div>
+                <div className="col-12 d-flex justify-content-between align-items-center pt-1">
+                    <small className="text-muted">Showing {visibleProducts.length} of {data.length} products</small>
+                    {(search || category) && <button type="button" className="btn btn-link btn-sm text-dark p-0" onClick={() => { setSearch(""); setCategory(""); }}>Clear filters</button>}
+                </div>
+            </div>
+
             <div className="border border-dark bg-white">
                 <Table hover responsive className="mb-0 align-middle">
                     <thead className="bg-dark text-white">
@@ -43,7 +106,11 @@ const AdminProducts = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {data.map((product) => (
+                        {visibleProducts.length === 0 ? (
+                            <tr>
+                                <td colSpan="5" className="text-center py-5 text-muted fw-bold text-uppercase Oswald-font">No products match these filters.</td>
+                            </tr>
+                        ) : visibleProducts.map((product) => (
                             <tr key={product.id} className="border-bottom border-light">
                                 <td className="ps-4">
                                     <div className="d-flex align-items-center py-2">

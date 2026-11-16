@@ -4,17 +4,23 @@ import AppContext from "../Context/Context";
 import unplugged from "../assets/unplugged.png";
 import API from "../axios";
 
-const Home = ({ selectedCategory }) => {
-  const { data, addToCart, refreshData } = useContext(AppContext);
+const Home = ({ selectedCategory, onClearCategory }) => {
+  const { data, addToCart, refreshData, notify } = useContext(AppContext);
   const [products, setProducts] = useState([]);
+  const [newsletterEmail, setNewsletterEmail] = useState("");
 
   useEffect(() => { refreshData(); }, []);
 
   const addToWishlist = async (productId) => {
     try {
       await API.post(`/wishlist/add/${productId}`);
-      alert("Added to Wishlist!");
-    } catch (err) { alert("Please log in to save items."); }
+      notify("Added to your wishlist");
+    } catch (err) { notify("Please sign in to save items to your wishlist", "error"); }
+  };
+
+  const handleNewsletterSubmit = (event) => {
+    event.preventDefault();
+    notify("Newsletter signup is not connected yet. Please check back soon.", "error");
   };
 
   useEffect(() => {
@@ -26,7 +32,9 @@ const Home = ({ selectedCategory }) => {
     }
   }, [data]);
 
-  const filteredProducts = selectedCategory ? products.filter(p => p.category === selectedCategory) : products;
+  const filteredProducts = selectedCategory
+    ? products.filter(p => (p.category || "").trim().toLocaleLowerCase() === selectedCategory.trim().toLocaleLowerCase())
+    : products;
 
   return (
     <div className="home-wrapper" style={{ backgroundColor: "#eaeded", minHeight: "100vh", paddingBottom: "50px" }}>
@@ -128,11 +136,50 @@ const Home = ({ selectedCategory }) => {
             <div className="col-12 text-center py-5 bg-white shadow-sm rounded-1">
               <i className="bi bi-box-seam display-1 text-light"></i>
               <h4 className="text-muted mt-3">We couldn't find any products in this section.</h4>
-              <button className="btn btn-warning mt-2" onClick={() => window.location.reload()}>Browse All</button>
+              <Link className="btn btn-warning mt-2" to="/" onClick={onClearCategory}>Browse All</Link>
             </div>
           )}
         </div>
       </div>
+
+      <footer className="home-footer mt-5">
+        <div className="container-fluid px-lg-5 py-5">
+          <div className="row g-5">
+            <div className="col-12 col-lg-5">
+              <Link to="/" className="home-footer-brand" onClick={onClearCategory}>ECOMWEB</Link>
+              <p className="home-footer-copy mt-3 mb-0">Discover something you'll love. Shop the latest finds across every category.</p>
+            </div>
+            <div className="col-6 col-lg-2">
+              <h2 className="home-footer-heading">Explore</h2>
+              <Link to="/" onClick={onClearCategory}>Shop all</Link>
+              <Link to="/wishlist">Wishlist</Link>
+              <Link to="/orders">Orders</Link>
+            </div>
+            <div className="col-12 col-lg-5">
+              <h2 className="home-footer-heading">Get the ECOMWEB newsletter</h2>
+              <p className="home-footer-copy">Hear about new arrivals, offers, and more.</p>
+              <form className="home-newsletter-form" onSubmit={handleNewsletterSubmit}>
+                <label className="visually-hidden" htmlFor="newsletter-email">Email address</label>
+                <input
+                  id="newsletter-email"
+                  type="email"
+                  placeholder="Your email address"
+                  value={newsletterEmail}
+                  onChange={event => setNewsletterEmail(event.target.value)}
+                  required
+                />
+                <button type="submit">Subscribe <i className="bi bi-arrow-right ms-2" /></button>
+              </form>
+            </div>
+          </div>
+          <div className="home-footer-bottom mt-5 pt-3">
+            <span>{"\u00A9"} {new Date().getFullYear()} ECOMWEB</span>
+            <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+              Back to top <i className="bi bi-arrow-up ms-1" />
+            </button>
+          </div>
+        </div>
+      </footer>
 
       {/* 3. Global CSS for Hover Animations */}
       <style>{`

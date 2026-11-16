@@ -15,6 +15,7 @@ import SignIn from "./components/SignIn";
 import Signup from "./components/Signup";
 import AdminDashboard from "./components/AdminDashboard";
 import AdminOrders from "./components/AdminOrders";
+import AdminOverview from "./components/AdminOverview";
 import AdminUsers from "./components/AdminUsers";
 import AdminProducts from "./components/AdminProducts"; 
 import Wishlist from "./components/Wishlist";
@@ -36,7 +37,7 @@ function App() {
 >
       <Navbar onSelectCategory={handleCategorySelect} />
       <Routes>
-        <Route path="/" element={<Home selectedCategory={selectedCategory} />} />
+        <Route path="/" element={<Home selectedCategory={selectedCategory} onClearCategory={() => setSelectedCategory("")} />} />
         <Route path="/add_product" element={<AddProduct />} />
         <Route path="/product/:id" element={<Product />} />
         <Route path="/cart" element={<Cart />} />
@@ -48,7 +49,7 @@ function App() {
         
         {/* Admin Nested Routes */}
         <Route path="/admin" element={<AdminDashboard />}>
-          <Route index element={<AdminOrders />} />
+          <Route index element={<AdminOverview />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="products" element={<AdminProducts />} /> 
