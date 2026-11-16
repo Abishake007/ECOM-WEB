@@ -78,6 +78,7 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         .authorizeHttpRequests(auth -> auth
             // 2. Preflight must always be first
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            .requestMatchers("/api/health").permitAll()
 
             // 3. SECURE WISHLIST (Move this above everything else)
             // Use authenticated() specifically for the Wishlist paths
