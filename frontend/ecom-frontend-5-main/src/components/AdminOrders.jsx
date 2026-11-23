@@ -28,6 +28,13 @@ const AdminOrders = () => {
     }
   };
 
+  const updateStatus = async (id, status) => {
+    try {
+      const response = await axios.put(`/admin/orders/${id}/status`, { status });
+      setOrders(current => current.map(order => order.id === id ? response.data : order));
+    } catch (error) { window.alert(error.response?.data || "Could not update order status."); }
+  };
+
   if (loading) return (
     <div className="text-center py-5">
       <Spinner animation="border" variant="dark" />
@@ -79,9 +86,9 @@ const AdminOrders = () => {
                   <td className="fw-black Oswald-font">₹{order.totalAmount?.toFixed(2)}</td>
                   <td>{getStatusBadge(order.status)}</td>
                   <td className="text-center pe-4">
-                    <button className="btn btn-sm btn-dark fw-black text-uppercase rounded-0 px-3 py-2 Oswald-font" style={{ fontSize: '10px', letterSpacing: '1px' }}>
-                      Details
-                    </button>
+                    <select aria-label={`Update order ${order.id} delivery status`} className="form-select form-select-sm" value={order.status?.toUpperCase() || "PROCESSING"} onChange={event => updateStatus(order.id, event.target.value)}>
+                      {["PROCESSING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"].map(status => <option key={status} value={status}>{status.replaceAll("_", " ")}</option>)}
+                    </select>
                   </td>
                 </tr>
               ))

@@ -81,7 +81,7 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice, handleCheckou
             
             <div className="mt-4 pt-3 border-top border-dark">
               <div className="d-flex justify-content-between mb-2 text-uppercase fw-bold" style={{ fontSize: '11px' }}>
-                <span>Subtotal</span>
+                <span>Amount due</span>
                 <span>₹{totalPrice.toFixed(2)}</span>
               </div>
               <div className="d-flex justify-content-between mt-2">

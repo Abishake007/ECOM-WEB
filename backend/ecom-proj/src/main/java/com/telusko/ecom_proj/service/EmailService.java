@@ -62,4 +62,22 @@ public class EmailService {
             e.printStackTrace();
         }
     }
+
+    @Async
+    public void sendPasswordResetEmail(String email, String resetUrl) {
+        if (mailSender == null) {
+            System.out.println("MailSender not configured, skipping password reset email.");
+            return;
+        }
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false);
+            helper.setTo(email);
+            helper.setSubject("Reset your KLYRO password");
+            helper.setText("Use this link within 15 minutes to reset your password: " + resetUrl);
+            mailSender.send(message);
+        } catch (MessagingException | RuntimeException e) {
+            System.err.println("Could not send password reset email: " + e.getMessage());
+        }
+    }
 }

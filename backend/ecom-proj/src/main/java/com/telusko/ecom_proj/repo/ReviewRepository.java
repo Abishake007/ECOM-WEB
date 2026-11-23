@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ReviewRepository extends JpaRepository<Review, Long> {
-    // JpaRepository provides all basic CRUD operations automatically
+public interface ReviewRepository extends JpaRepository<Review, Integer> {
+    java.util.List<Review> findByProductIdOrderByCreatedAtDesc(Integer productId);
 }

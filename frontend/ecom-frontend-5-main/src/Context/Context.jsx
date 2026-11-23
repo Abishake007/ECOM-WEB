@@ -26,8 +26,17 @@ export const AppProvider = ({ children }) => {
 
 
   const addToCart = (product) => {
+    const stock = Number(product.stockQuantity || 0);
+    if (!product.productAvailable || stock < 1) {
+      notify("This product is currently out of stock.", "error");
+      return;
+    }
     const existingProductIndex = cart.findIndex((item) => item.id === product.id);
     if (existingProductIndex !== -1) {
+      if (cart[existingProductIndex].quantity >= stock) {
+        notify(`Only ${stock} item${stock === 1 ? "" : "s"} available.`, "error");
+        return;
+      }
       const updatedCart = cart.map((item, index) =>
         index === existingProductIndex
           ? { ...item, quantity: item.quantity + 1 }

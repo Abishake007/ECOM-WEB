@@ -20,6 +20,9 @@ import AdminUsers from "./components/AdminUsers";
 import AdminProducts from "./components/AdminProducts"; 
 import Wishlist from "./components/Wishlist";
 import OrderHistory from "./components/OrderHistory";
+import ForgotPassword from "./components/ForgotPassword";
+import ResetPassword from "./components/ResetPassword";
+import AdminRoute from "./components/AdminRoute";
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -43,12 +46,14 @@ function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/product/update/:id" element={<UpdateProduct />} />
         <Route path="/login" element={<SignIn />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/orders" element={<OrderHistory />} />
         
         {/* Admin Nested Routes */}
-        <Route path="/admin" element={<AdminDashboard />}>
+        <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>}>
           <Route index element={<AdminOverview />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="users" element={<AdminUsers />} />

@@ -8,6 +8,13 @@ const Home = ({ selectedCategory, onClearCategory }) => {
   const { data, addToCart, refreshData, notify } = useContext(AppContext);
   const [products, setProducts] = useState([]);
   const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [sortBy, setSortBy] = useState("featured");
+  const [availableOnly, setAvailableOnly] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [brandFilter, setBrandFilter] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [recentIds] = useState(() => JSON.parse(localStorage.getItem("klyro-recently-viewed") || "[]"));
 
   useEffect(() => { refreshData(); }, []);
 
@@ -32,9 +39,21 @@ const Home = ({ selectedCategory, onClearCategory }) => {
     }
   }, [data]);
 
-  const filteredProducts = selectedCategory
+  const filteredProducts = (selectedCategory
     ? products.filter(p => (p.category || "").trim().toLocaleLowerCase() === selectedCategory.trim().toLocaleLowerCase())
-    : products;
+    : products).filter(p => (!availableOnly || (p.productAvailable && Number(p.stockQuantity) > 0)) &&
+      (!brandFilter || p.brand === brandFilter) && (!minPrice || Number(p.price) >= Number(minPrice)) &&
+      (!maxPrice || Number(p.price) <= Number(maxPrice)) &&
+      `${p.name} ${p.brand || ""} ${p.category || ""}`.toLowerCase().includes(searchText.toLowerCase()));
+  const brands = [...new Set(products.map(p => p.brand).filter(Boolean))].sort();
+  const visibleProducts = [...filteredProducts].sort((a, b) => {
+    if (sortBy === "price-low") return Number(a.price) - Number(b.price);
+    if (sortBy === "price-high") return Number(b.price) - Number(a.price);
+    if (sortBy === "name") return a.name.localeCompare(b.name);
+    if (sortBy === "newest") return new Date(b.releaseDate || 0) - new Date(a.releaseDate || 0);
+    return 0;
+  });
+  const recentlyViewed = recentIds.map(id => products.find(p => String(p.id) === String(id))).filter(Boolean).slice(0, 6);
 
   return (
     <div className="home-wrapper" style={{ backgroundColor: "#eaeded", minHeight: "100vh", paddingBottom: "50px" }}>
@@ -67,9 +86,20 @@ const Home = ({ selectedCategory, onClearCategory }) => {
           zIndex: 2 
         }}
       >
+        <div className="d-flex flex-wrap align-items-center gap-2 bg-white p-3 mb-3 border">
+          <input className="form-control" style={{ maxWidth: 260 }} value={searchText} onChange={e => setSearchText(e.target.value)} placeholder="Search products, brands..." aria-label="Filter products" />
+          <select className="form-select" style={{ maxWidth: 210 }} value={sortBy} onChange={e => setSortBy(e.target.value)} aria-label="Sort products">
+            <option value="featured">Featured</option><option value="newest">Newest</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option><option value="name">Name</option>
+          </select>
+          <select className="form-select" style={{ maxWidth: 180 }} value={brandFilter} onChange={e => setBrandFilter(e.target.value)} aria-label="Filter by brand"><option value="">All brands</option>{brands.map(brand => <option key={brand}>{brand}</option>)}</select>
+          <input className="form-control" type="number" min="0" style={{ maxWidth: 130 }} value={minPrice} onChange={e => setMinPrice(e.target.value)} placeholder="Min price" aria-label="Minimum price" />
+          <input className="form-control" type="number" min="0" style={{ maxWidth: 130 }} value={maxPrice} onChange={e => setMaxPrice(e.target.value)} placeholder="Max price" aria-label="Maximum price" />
+          <label className="d-flex align-items-center gap-2 small fw-bold ms-md-auto"><input type="checkbox" checked={availableOnly} onChange={e => setAvailableOnly(e.target.checked)} /> In stock only</label>
+          <span className="small text-muted">{visibleProducts.length} products</span>
+        </div>
         <div className="row g-3">
-          {filteredProducts.length > 0 ? (
-            filteredProducts.map((product) => (
+          {visibleProducts.length > 0 ? (
+            visibleProducts.map((product) => (
               <div className="col-6 col-md-4 col-lg-3 col-xl-2 mb-2" key={product.id}>
                 {/* Modern Card Design */}
                 <div className="product-card h-100 bg-white p-3 border-0 transition-all shadow-hover">
@@ -79,6 +109,7 @@ const Home = ({ selectedCategory, onClearCategory }) => {
                     <span className="text-muted text-uppercase mb-1" style={{ fontSize: '10px', letterSpacing: '1px' }}>
                       {product.category}
                     </span>
+                    {Number(product.stockQuantity) > 0 && Number(product.stockQuantity) <= 5 && <span className="text-danger small fw-bold mb-1">Only {product.stockQuantity} left</span>}
                     
                     <h6 className="fw-bold mb-3 text-truncate" style={{ fontSize: '14px' }}>
                       {product.name}
@@ -113,10 +144,11 @@ const Home = ({ selectedCategory, onClearCategory }) => {
                           </button>
                           <button 
                             className="btn btn-sm btn-warning fw-bold px-3 shadow-sm rounded-1"
+                            disabled={!product.productAvailable || Number(product.stockQuantity) <= 0}
                             onClick={(e) => { e.preventDefault(); addToCart(product); }}
                             style={{ fontSize: '12px' }}
                           >
-                            ADD
+                            {Number(product.stockQuantity) > 0 ? "ADD" : "SOLD OUT"}
                           </button>
                         </div>
                       </div>
@@ -140,13 +172,14 @@ const Home = ({ selectedCategory, onClearCategory }) => {
             </div>
           )}
         </div>
+        {!selectedCategory && recentlyViewed.length > 0 && <section className="mt-5 bg-white p-4"><h2 className="h5 fw-bold text-uppercase mb-3">Recently viewed</h2><div className="d-flex gap-3 overflow-auto">{recentlyViewed.map(p => <Link key={p.id} to={`/product/${p.id}`} className="text-dark text-decoration-none border p-2 flex-shrink-0" style={{ width: 170 }}><div className="small text-truncate">{p.name}</div><strong>₹{p.price}</strong></Link>)}</div></section>}
       </div>
 
       <footer className="home-footer mt-5">
         <div className="container-fluid px-lg-5 py-5">
           <div className="row g-5">
             <div className="col-12 col-lg-5">
-              <Link to="/" className="home-footer-brand" onClick={onClearCategory}>ECOMWEB</Link>
+              <Link to="/" className="home-footer-brand" onClick={onClearCategory}>KLYRO</Link>
               <p className="home-footer-copy mt-3 mb-0">Discover something you'll love. Shop the latest finds across every category.</p>
             </div>
             <div className="col-6 col-lg-2">
@@ -156,7 +189,7 @@ const Home = ({ selectedCategory, onClearCategory }) => {
               <Link to="/orders">Orders</Link>
             </div>
             <div className="col-12 col-lg-5">
-              <h2 className="home-footer-heading">Get the ECOMWEB newsletter</h2>
+              <h2 className="home-footer-heading">Get the KLYRO newsletter</h2>
               <p className="home-footer-copy">Hear about new arrivals, offers, and more.</p>
               <form className="home-newsletter-form" onSubmit={handleNewsletterSubmit}>
                 <label className="visually-hidden" htmlFor="newsletter-email">Email address</label>
@@ -173,7 +206,7 @@ const Home = ({ selectedCategory, onClearCategory }) => {
             </div>
           </div>
           <div className="home-footer-bottom mt-5 pt-3">
-            <span>{"\u00A9"} {new Date().getFullYear()} ECOMWEB</span>
+            <span>{"\u00A9"} {new Date().getFullYear()} KLYRO</span>
             <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
               Back to top <i className="bi bi-arrow-up ms-1" />
             </button>

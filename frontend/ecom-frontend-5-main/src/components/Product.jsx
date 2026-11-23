@@ -7,11 +7,15 @@ import unplugged from "../assets/unplugged.png";
 
 const Product = () => {
   const { id } = useParams();
-  const { addToCart } = useContext(AppContext);
+  const { addToCart, data } = useContext(AppContext);
   const [product, setProduct] = useState(null);
   const [mainImageUrl, setMainImageUrl] = useState("");
   const [gallery, setGallery] = useState([]); 
   const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState([]);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [reviewMessage, setReviewMessage] = useState("");
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -19,6 +23,10 @@ const Product = () => {
         const response = await API.get(`/product/${id}`);
         const productData = response.data;
         setProduct(productData);
+        const viewed = JSON.parse(localStorage.getItem("klyro-recently-viewed") || "[]").filter(item => String(item) !== String(id));
+        localStorage.setItem("klyro-recently-viewed", JSON.stringify([id, ...viewed].slice(0, 12)));
+        const reviewResponse = await API.get(`/product/${id}/reviews`);
+        setReviews(reviewResponse.data);
         
         const primaryUrl = productData.imageData 
           ? `data:${productData.imageType};base64,${productData.imageData}`
@@ -41,6 +49,19 @@ const Product = () => {
     };
     if (id) fetchProduct();
   }, [id]);
+
+  const submitReview = async (event) => {
+    event.preventDefault();
+    setReviewMessage("");
+    try {
+      const response = await API.post(`/product/${id}/reviews`, { rating: Number(rating), comment });
+      setReviews(current => [response.data, ...current]);
+      setComment("");
+      setReviewMessage("Your review has been added.");
+    } catch (error) {
+      setReviewMessage(error.response?.status === 401 ? "Sign in to leave a review." : (error.response?.data || "Could not submit your review."));
+    }
+  };
 
   if (loading) return (
     <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
@@ -126,7 +147,7 @@ const Product = () => {
               <div className="price-section mb-4">
                 <div className="d-flex align-items-center gap-3">
                   <span className="h3 fw-black text-dark mb-0">₹{product.price}</span>
-                  {product.productAvailable ? (
+                  {product.productAvailable && Number(product.stockQuantity) > 0 ? (
                     <span className="text-uppercase small fw-bold text-success border border-success px-2 py-1">In Stock</span>
                   ) : (
                     <span className="text-uppercase small fw-bold text-danger border border-danger px-2 py-1">Out of Stock</span>
@@ -165,7 +186,7 @@ const Product = () => {
                   variant="dark" 
                   className="w-100 py-3 fw-black text-uppercase shadow-none mb-3"
                   style={{ borderRadius: '0', letterSpacing: '2px', fontSize: '1.1rem' }}
-                  disabled={!product.productAvailable}
+                  disabled={!product.productAvailable || Number(product.stockQuantity) <= 0}
                   onClick={() => addToCart(product)}
                 >
                   Add to Bag <i className="bi bi-arrow-right ms-2"></i>
@@ -186,9 +207,9 @@ const Product = () => {
 
               {/* REVIEWS: Monochrome List */}
               <div className="mt-5 border-top border-dark pt-5">
-                <h5 className="fw-black text-uppercase mb-4">Reviews ({product.reviews?.length || 0})</h5>
-                {product.reviews && product.reviews.length > 0 ? (
-                  product.reviews.map((review) => (
+                <h5 className="fw-black text-uppercase mb-4">Reviews ({reviews.length})</h5>
+                {reviews.length > 0 ? (
+                  reviews.map((review) => (
                     <div key={review.id} className="mb-4 pb-4 border-bottom">
                         <div className="d-flex justify-content-between align-items-center mb-2">
                           <span className="fw-black text-uppercase small">{review.reviewerName}</span>
@@ -205,11 +226,20 @@ const Product = () => {
                 ) : (
                   <p className="text-muted small text-uppercase fw-bold">No reviews yet.</p>
                 )}
+                <form onSubmit={submitReview} className="mt-4 p-3 bg-light">
+                  <h6 className="fw-bold text-uppercase">Write a review</h6>
+                  <label className="form-label small fw-bold" htmlFor="review-rating">Rating</label>
+                  <select id="review-rating" className="form-select mb-2" value={rating} onChange={e => setRating(e.target.value)}><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select>
+                  <textarea className="form-control mb-2" rows="3" maxLength="1000" value={comment} onChange={e => setComment(e.target.value)} placeholder="Share your experience" required />
+                  <button className="btn btn-dark text-uppercase fw-bold" type="submit">Submit review</button>
+                  {reviewMessage && <p className="small mt-2 mb-0" role="status">{reviewMessage}</p>}
+                </form>
               </div>
             </div>
           </Col>
         </Row>
       </Container>
+      {data.filter(item => String(item.id) !== String(id) && item.category?.toLowerCase() === product.category?.toLowerCase()).length > 0 && <Container className="mt-5"><h2 className="h4 fw-black text-uppercase mb-3">You may also like</h2><div className="row g-3">{data.filter(item => String(item.id) !== String(id) && item.category?.toLowerCase() === product.category?.toLowerCase()).slice(0, 4).map(item => <div className="col-6 col-md-3" key={item.id}><Link className="d-block border p-3 h-100 text-decoration-none text-dark" to={`/product/${item.id}`}><strong>{item.name}</strong><div>₹{item.price}</div></Link></div>)}</div></Container>}
 
       <style>{`
         .fw-black { font-weight: 900 !important; }

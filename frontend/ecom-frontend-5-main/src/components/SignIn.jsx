@@ -72,6 +72,8 @@ const SignIn = () => {
                   />
                 </div>
 
+                <div className="text-end mb-3"><Link to="/forgot-password" className="small text-dark">Forgot password?</Link></div>
+
                 <button 
                   type="submit" 
                   className="btn btn-dark w-100 py-3 fw-black text-uppercase d-flex align-items-center justify-content-between mb-4 shadow-none" 

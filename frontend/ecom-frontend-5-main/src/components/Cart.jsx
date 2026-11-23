@@ -2,19 +2,54 @@ import React, { useContext, useEffect, useState } from "react";
 import AppContext from "../Context/Context";
 import CheckoutPopup from "./CheckoutPopup";
 import unplugged from "../assets/unplugged.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import API from "../axios";
 
 const Cart = () => {
-  const { cart, removeFromCart } = useContext(AppContext);
+  const { cart, removeFromCart, clearCart, notify, refreshData } = useContext(AppContext);
   const [showPopup, setShowPopup] = useState(false);
   const [total, setTotal] = useState(0);
+  const [coupon, setCoupon] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [couponMessage, setCouponMessage] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const sum = cart.reduce((acc, item) => acc + item.price * (item.quantity || 1), 0);
     setTotal(sum);
+    setDiscount(0);
+    setCouponMessage("");
   }, [cart]);
 
   const shipping = cart.length > 0 ? 10.00 : 0; 
+
+  const applyCoupon = () => {
+    const code = coupon.trim().toUpperCase();
+    const rate = code === "KLYRO10" ? 0.10 : code === "WELCOME15" ? 0.15 : 0;
+    if (!rate) { setDiscount(0); setCouponMessage("That coupon code is not valid."); return; }
+    const amount = Number((total * rate).toFixed(2));
+    setDiscount(amount);
+    setCouponMessage(`${code} applied: ₹${amount.toFixed(2)} off.`);
+  };
+
+  const completeCheckout = async (shippingDetails) => {
+    try {
+      const address = shippingDetails.address;
+      const shippingAddress = [address.line1, address.line2, address.city, address.state, address.postal_code, address.country].filter(Boolean).join(", ");
+      await API.post("/orders", {
+        totalAmount: Number((total + shipping - discount).toFixed(2)), couponCode: discount ? coupon.trim().toUpperCase() : "", shippingAddress,
+        phoneNumber: shippingDetails.phone || "",
+        items: cart.map(item => ({ productId: item.id, quantity: item.quantity || 1 }))
+      });
+      clearCart();
+      refreshData();
+      notify("Payment complete. Your order is being processed.");
+      setShowPopup(false);
+      navigate("/orders");
+    } catch (error) {
+      notify(error.response?.data || "Payment succeeded, but order confirmation failed. Contact support with your payment receipt.", "error");
+    }
+  };
 
   return (
     <div className="cart-wrapper bg-white" style={{ minHeight: "100vh", paddingTop: "140px", paddingBottom: "80px" }}>
@@ -90,6 +125,13 @@ const Cart = () => {
                   <span>Shipping</span>
                   <span>₹{shipping.toFixed(2)}</span>
                 </div>
+
+                <div className="mb-3">
+                  <label htmlFor="coupon-code" className="form-label small fw-bold text-uppercase">Discount code</label>
+                  <div className="input-group"><input id="coupon-code" className="form-control" value={coupon} onChange={e => { setCoupon(e.target.value); setDiscount(0); setCouponMessage(""); }} placeholder="Enter code" /><button type="button" className="btn btn-outline-dark" onClick={applyCoupon}>Apply</button></div>
+                  {couponMessage && <small className={discount ? "text-success" : "text-danger"} role="status">{couponMessage}</small>}
+                </div>
+                {discount > 0 && <div className="d-flex justify-content-between mb-3 text-uppercase small fw-bold text-success"><span>Discount</span><span>-₹{discount.toFixed(2)}</span></div>}
                 
                 <div className="d-flex justify-content-between mb-4 text-uppercase small fw-bold">
                   <span>Tax</span>
@@ -98,7 +140,7 @@ const Cart = () => {
                 
                 <div className="border-top border-dark pt-3 d-flex justify-content-between mb-4">
                   <span className="h5 fw-black text-uppercase Oswald-font">Total</span>
-                  <span className="h5 fw-black Oswald-font">₹{(total + shipping).toFixed(2)}</span>
+                  <span className="h5 fw-black Oswald-font">₹{(total + shipping - discount).toFixed(2)}</span>
                 </div>
 
                 <button 
@@ -125,8 +167,9 @@ const Cart = () => {
         <CheckoutPopup 
           show={showPopup} 
           handleClose={() => setShowPopup(false)} 
-          totalPrice={total + shipping} 
+          totalPrice={total + shipping - discount}
           cartItems={cart}
+          handleCheckout={completeCheckout}
         />
       )}
 

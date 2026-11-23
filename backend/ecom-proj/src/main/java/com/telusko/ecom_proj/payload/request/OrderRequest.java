@@ -8,6 +8,9 @@ import java.util.List;
 public class OrderRequest {
     private List<CartItemRequest> items;
     private BigDecimal totalAmount;
+    private String shippingAddress;
+    private String phoneNumber;
+    private String couponCode;
 
     @Data
     public static class CartItemRequest {

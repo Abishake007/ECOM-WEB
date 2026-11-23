@@ -7,11 +7,17 @@ const PaymentForm = ({ totalPrice, onPaymentSuccess }) => {
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [shippingValue, setShippingValue] = useState(null);
+  const [addressComplete, setAddressComplete] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!stripe || !elements) return;
+    if (!addressComplete || !shippingValue) {
+      setErrorMessage("Please complete your shipping address before paying.");
+      return;
+    }
 
     setIsProcessing(true);
 
@@ -24,7 +30,8 @@ const PaymentForm = ({ totalPrice, onPaymentSuccess }) => {
       setErrorMessage(error.message);
       setIsProcessing(false);
     } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-      onPaymentSuccess();
+      await onPaymentSuccess(shippingValue);
+      setIsProcessing(false);
     }
   };
 
@@ -35,7 +42,7 @@ const PaymentForm = ({ totalPrice, onPaymentSuccess }) => {
           01. Shipping Information
         </h6>
         <div className="border border-dark p-3 bg-white">
-          <AddressElement options={{ 
+          <AddressElement onChange={(event) => { setAddressComplete(event.complete); setShippingValue(event.value); }} options={{
             mode: 'shipping', 
             allowedCountries: ['IN', 'US'],
             appearance: {

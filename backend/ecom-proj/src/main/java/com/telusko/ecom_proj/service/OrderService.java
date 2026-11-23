@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Service
 public class OrderService {
@@ -28,18 +30,26 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(User user, OrderRequest orderRequest) {
+        if (orderRequest.getItems() == null || orderRequest.getItems().isEmpty()) {
+            throw new IllegalArgumentException("An order must contain at least one item.");
+        }
         Order order = new Order();
         order.setUser(user);
-        order.setTotalAmount(orderRequest.getTotalAmount());
-        order.setStatus("COMPLETED");
+        order.setStatus("PROCESSING");
         order.setOrderDate(new Date());
+        order.setShippingAddress(orderRequest.getShippingAddress());
+        order.setPhoneNumber(orderRequest.getPhoneNumber());
 
         List<OrderItem> orderItems = new ArrayList<>();
+        BigDecimal subtotal = BigDecimal.ZERO;
         for (OrderRequest.CartItemRequest itemRequest : orderRequest.getItems()) {
+            if (itemRequest.getQuantity() == null || itemRequest.getQuantity() < 1) {
+                throw new IllegalArgumentException("Item quantity must be at least 1.");
+            }
             Product product = productRepo.findById(itemRequest.getProductId())
                     .orElseThrow(() -> new RuntimeException("Product not found: " + itemRequest.getProductId()));
 
-            if (product.getStockQuantity() < itemRequest.getQuantity()) {
+            if (!Boolean.TRUE.equals(product.getProductAvailable()) || product.getStockQuantity() == null || product.getStockQuantity() < itemRequest.getQuantity()) {
                 throw new RuntimeException("Insufficient stock for product: " + product.getName());
             }
 
@@ -51,9 +61,19 @@ public class OrderService {
             orderItem.setOrder(order);
             orderItem.setProduct(product);
             orderItem.setQuantity(itemRequest.getQuantity());
-            orderItem.setPrice(itemRequest.getPrice());
+            orderItem.setPrice(product.getPrice());
+            subtotal = subtotal.add(product.getPrice().multiply(BigDecimal.valueOf(itemRequest.getQuantity())));
             orderItems.add(orderItem);
         }
+
+        BigDecimal discountRate = switch (orderRequest.getCouponCode() == null ? "" : orderRequest.getCouponCode().trim().toUpperCase()) {
+            case "KLYRO10" -> new BigDecimal("0.10");
+            case "WELCOME15" -> new BigDecimal("0.15");
+            case "" -> BigDecimal.ZERO;
+            default -> throw new IllegalArgumentException("Invalid coupon code.");
+        };
+        BigDecimal discount = subtotal.multiply(discountRate).setScale(2, RoundingMode.HALF_UP);
+        order.setTotalAmount(subtotal.add(new BigDecimal("10.00")).subtract(discount).max(BigDecimal.ZERO));
 
         order.setOrderItems(orderItems);
         Order savedOrder = orderRepo.save(order);

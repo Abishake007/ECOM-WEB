@@ -11,8 +11,10 @@ import com.telusko.ecom_proj.repo.RoleRepository;
 import com.telusko.ecom_proj.repo.UserRepository;
 import com.telusko.ecom_proj.security.jwt.JwtUtils;
 import com.telusko.ecom_proj.security.services.UserDetailsImpl;
+import com.telusko.ecom_proj.service.EmailService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -44,6 +46,12 @@ public class AuthController {
 
   @Autowired
   JwtUtils jwtUtils;
+
+  @Autowired
+  EmailService emailService;
+
+  @Value("${ecom.app.frontendUrl:http://localhost:5173}")
+  String frontendUrl;
 
   @PostMapping("/signin")
   public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -120,4 +128,36 @@ public class AuthController {
 
     return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
   }
+
+  @PostMapping("/password-reset/request")
+  public ResponseEntity<?> requestPasswordReset(@RequestBody PasswordResetRequest request) {
+    userRepository.findByEmail(request.email == null ? "" : request.email.trim())
+        .ifPresent(user -> {
+          String token = jwtUtils.generatePasswordResetToken(user.getUsername(), user.getPassword());
+          emailService.sendPasswordResetEmail(user.getEmail(), frontendUrl + "/reset-password?token=" + token);
+        });
+    return ResponseEntity.ok(new MessageResponse("If that email is registered, a password reset link will be sent."));
+  }
+
+  @PostMapping("/password-reset/confirm")
+  public ResponseEntity<?> confirmPasswordReset(@RequestBody PasswordResetConfirmRequest request) {
+    if (request.token == null || request.password == null || request.password.length() < 8) {
+      return ResponseEntity.badRequest().body(new MessageResponse("Use a valid reset link and a password with at least 8 characters."));
+    }
+    try {
+      String username = jwtUtils.getUserNameFromJwtToken(request.token);
+      User user = userRepository.findByUsername(username).orElse(null);
+      if (user == null || !jwtUtils.isValidPasswordResetToken(request.token, user.getPassword())) {
+        return ResponseEntity.badRequest().body(new MessageResponse("This reset link is invalid or expired. Request a new one."));
+      }
+      user.setPassword(encoder.encode(request.password));
+      userRepository.save(user);
+      return ResponseEntity.ok(new MessageResponse("Password updated. You can now sign in."));
+    } catch (RuntimeException exception) {
+      return ResponseEntity.badRequest().body(new MessageResponse("This reset link is invalid or expired. Request a new one."));
+    }
+  }
+
+  public static class PasswordResetRequest { public String email; }
+  public static class PasswordResetConfirmRequest { public String token; public String password; }
 }

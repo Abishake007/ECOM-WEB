@@ -8,7 +8,7 @@ const OrderHistory = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get('/user/orders')
+    axios.get('/orders/user')
       .then((res) => {
         setOrders(res.data);
         setLoading(false);
@@ -75,10 +75,10 @@ const OrderHistory = () => {
                   <Row className="align-items-center">
                     <Col md={8}>
                       <div className="d-flex align-items-center mb-3">
-                        <Badge bg={order.status === 'Delivered' ? 'success' : 'warning'} className="me-2 p-2 px-3">
-                          {order.status.toUpperCase()}
+                        <Badge bg={order.status?.toUpperCase() === 'DELIVERED' ? 'success' : order.status?.toUpperCase() === 'CANCELLED' ? 'danger' : 'warning'} className="me-2 p-2 px-3">
+                          {(order.status || 'PROCESSING').replaceAll('_', ' ').toUpperCase()}
                         </Badge>
-                        <h5 className="mb-0 fw-bold">Package {order.status === 'Delivered' ? 'arrived' : 'status updated'}</h5>
+                        <h5 className="mb-0 fw-bold">{order.status?.toUpperCase() === 'DELIVERED' ? 'Package delivered' : order.status?.toUpperCase() === 'CANCELLED' ? 'Order cancelled' : 'Delivery in progress'}</h5>
                       </div>
                       
                       <div className="order-details text-muted small">
@@ -88,9 +88,9 @@ const OrderHistory = () => {
                     </Col>
                     
                     <Col md={4} className="text-md-end mt-3 mt-md-0 d-flex flex-column gap-2">
-                      <Button variant="warning" className="w-100 fw-bold rounded-pill" style={{ backgroundColor: "#ffd814", borderColor: "#fcd200" }}>
-                        Track Package
-                      </Button>
+                      <div className="small text-start p-3 bg-light" aria-label="Delivery tracking progress">
+                        <strong>Tracking</strong><div className="d-flex flex-wrap gap-2 mt-2">{["PROCESSING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"].map((step, index) => <span key={step} className={`badge ${["PROCESSING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"].indexOf(order.status?.toUpperCase()) >= index ? 'bg-success' : 'bg-secondary'}`}>{step.replaceAll("_", " ")}</span>)}</div>
+                      </div>
                       <Button variant="outline-dark" className="w-100 fw-bold rounded-pill shadow-sm">
                         Write a product review
                       </Button>

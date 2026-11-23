@@ -1,4 +1,4 @@
-# ECOM-WEB – Full Stack E-Commerce Application
+# KLYRO – Full Stack E-Commerce Application
 
 A comprehensive e-commerce web application built with React + Vite (frontend) and Spring Boot (backend). Includes product management, user authentication with JWT, shopping cart, wishlists, order processing, and Stripe payment integration.
 
@@ -25,11 +25,16 @@ A comprehensive e-commerce web application built with React + Vite (frontend) an
 **User Features**
 - User registration and authentication
 - Browse and search products with category filtering
+- Filter products by brand, price, and availability; sort by price, name, or newest
 - Product details with image gallery
+- Product ratings and customer reviews
+- Related products and recently viewed items
 - Shopping cart with quantity management
+- KLYRO10 and WELCOME15 discount codes
 - Persistent cart storage
 - Wishlist functionality
-- Order history and tracking
+- Order history with delivery status tracking
+- Password reset by email
 
 **Admin Features**
 - Admin dashboard with control panel
@@ -91,6 +96,8 @@ spring.datasource.password=your_password
 spring.jpa.hibernate.ddl-auto=update
 ```
 
+Configure `FRONTEND_URL` for the deployed frontend and `MAIL_USERNAME` / `MAIL_PASSWORD` to enable password reset emails.
+
 3. Run the backend:
 ```bash
 mvn spring-boot:run
@@ -135,6 +142,8 @@ Frontend runs on `http://localhost:5173`
 | POST | `/api/product` | Add product (Auth required) |
 | PUT | `/api/product/{id}` | Update product (Auth required) |
 | DELETE | `/api/product/{id}` | Delete product (Admin only) |
+| GET | `/api/product/{id}/reviews` | List product reviews |
+| POST | `/api/product/{id}/reviews` | Add a review (Auth required) |
 
 ### Wishlist
 | Method | Endpoint | Description |
@@ -149,6 +158,13 @@ Frontend runs on `http://localhost:5173`
 | POST | `/api/orders` | Create order (Auth required) |
 | GET | `/api/orders/user` | Get user's orders |
 | GET | `/api/admin/orders` | Get all orders (Admin only) |
+| PUT | `/api/admin/orders/{id}/status` | Update delivery status (Admin only) |
+
+### Password Recovery
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/password-reset/request` | Email a time-limited reset link |
+| POST | `/api/auth/password-reset/confirm` | Set a new password with the reset token |
 
 ### Payment
 | Method | Endpoint | Description |

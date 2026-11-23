@@ -2,6 +2,7 @@ import axios from "axios";
 
 const API = axios.create({
   baseURL: "https://ecom-web-knao.onrender.com/api",
+ // baseURL: "http://localhost:8080/api"
 });
 
 API.interceptors.request.use((config) => {
