@@ -2,6 +2,7 @@ import React, { useState, useContext } from "react";
 import API from "../axios";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
 import AppContext from "../Context/Context";
+import CategoryField from "./CategoryField";
 
 const AddProduct = () => {
   const { notify, refreshData } = useContext(AppContext);
@@ -19,6 +20,7 @@ const AddProduct = () => {
 
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [categoryFieldKey, setCategoryFieldKey] = useState(0);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -58,6 +60,7 @@ const AddProduct = () => {
         });
         setImages([]);
         setImagePreviews([]);
+        setCategoryFieldKey(key => key + 1);
       })
       .catch((err) => {
         console.error(err);
@@ -110,25 +113,7 @@ const AddProduct = () => {
                     </Form.Group>
                   </Col>
                   <Col md={6}>
-                    <Form.Group className="mb-4">
-                      <Form.Label className="Oswald-font fw-bold text-uppercase small">Category</Form.Label>
-                      <Form.Select 
-                        name="category" 
-                        className="rounded-0 border-dark shadow-none py-2" 
-                        value={product.category} 
-                        onChange={handleInputChange} 
-                        required
-                      >
-                        <option value="">SELECT CATEGORY</option>
-                        <option value="Mobile">MOBILE</option>
-                        <option value="Laptop">LAPTOP</option>
-                        <option value="Electronics">ELECTRONICS</option>
-                        <option value="Fashion">FASHION & APPAREL</option>
-                        <option value="Camera">CAMERA</option>
-                        <option value="Toys">TOYS</option>
-                        <option value="Home_applience">HOME APPLIENCE</option>
-                      </Form.Select>
-                    </Form.Group>
+                    <CategoryField key={categoryFieldKey} value={product.category} onChange={category => setProduct(current => ({ ...current, category }))} />
                   </Col>
                 </Row>
 

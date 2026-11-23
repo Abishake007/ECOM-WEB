@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import API from "../axios";
 import { Container, Row, Col, Form, Button, Spinner } from "react-bootstrap";
 import AppContext from "../Context/Context";
+import CategoryField from "./CategoryField";
 
 const UpdateProduct = () => {
   const { notify, refreshData } = useContext(AppContext);
@@ -164,22 +165,7 @@ const UpdateProduct = () => {
                   </Col>
 
                   <Col md={6}>
-                    <Form.Group>
-                      <Form.Label className="Oswald-font fw-bold text-uppercase small">Market Category</Form.Label>
-                      <Form.Select 
-                        name="category" value={updateProduct.category} 
-                        onChange={handleChange} className="rounded-0 border-dark shadow-none py-2"
-                      >
-                        <option value="laptop">LAPTOP</option>
-                        <option value="headphone">HEADPHONE</option>
-                        <option value="mobile">MOBILE</option>
-                        <option value="electronics">ELECTRONICS</option>
-                        <option value="fashion">FASHION & APPAREL</option>
-                         <option value="camera">CAMERA</option>
-                        <option value="toys">TOYS</option>
-                        <option value="home">HOME & KITCHEN</option>
-                      </Form.Select>
-                    </Form.Group>
+                    <CategoryField label="Market Category" value={updateProduct.category} onChange={category => setUpdateProduct(current => ({ ...current, category }))} />
                   </Col>
 
                   <Col xs={12}>
