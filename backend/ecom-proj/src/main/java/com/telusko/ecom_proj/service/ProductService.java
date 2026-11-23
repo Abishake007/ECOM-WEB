@@ -4,6 +4,7 @@ import com.telusko.ecom_proj.model.Product;
 import com.telusko.ecom_proj.model.ProductImage;
 import com.telusko.ecom_proj.model.Review;
 import com.telusko.ecom_proj.repo.ProductRepo;
+import com.telusko.ecom_proj.repo.ProductSummary;
 import com.telusko.ecom_proj.repo.ReviewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,8 +25,8 @@ public class ProductService {
     @Autowired
     private ReviewRepository reviewRepository;
 
-    public List<Product> getAllProducts() {
-        return repo.findAll();
+    public List<ProductSummary> getAllProducts() {
+        return repo.findAllSummaries();
     }
 
     public Product getProductById(int id) {
@@ -94,7 +95,7 @@ public class ProductService {
         }
     }
 
-    public List<Product> searchProduct(String keyword) {
+    public List<ProductSummary> searchProduct(String keyword) {
         return repo.searchProducts(keyword);
     }
 

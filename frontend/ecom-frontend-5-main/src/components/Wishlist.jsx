@@ -96,7 +96,7 @@ const Wishlist = () => {
                     {/* Image Stage */}
                     <div className="image-stage d-flex align-items-center justify-content-center mb-3 bg-light" style={{ height: "200px" }}>
                       <img 
-                        src={product.imageData ? `data:${product.imageType};base64,${product.imageData}` : unplugged} 
+                        src={product.imageUrl || unplugged}
                         style={{ maxHeight: "80%", maxWidth: "80%", objectFit: "contain" }}
                         alt={product.name}
                       />

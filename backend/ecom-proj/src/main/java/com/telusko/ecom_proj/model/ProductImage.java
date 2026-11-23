@@ -1,5 +1,6 @@
 package com.telusko.ecom_proj.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,7 @@ public class ProductImage {
 
     @Lob
     @Column(columnDefinition = "LONGBLOB")
+    @JsonIgnore
     private byte[] data;
 
     @ManyToOne(fetch = FetchType.LAZY)

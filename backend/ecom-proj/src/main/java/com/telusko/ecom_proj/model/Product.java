@@ -3,6 +3,7 @@ package com.telusko.ecom_proj.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -38,7 +39,13 @@ public class Product {
 
     @Lob
     @Column(columnDefinition = "LONGBLOB") // Ensures high-res storage in MySQL
+    @JsonIgnore
     private byte[] imageData;
+
+    @JsonProperty("imageUrl")
+    public String getImageUrl() {
+        return id == null ? null : "/api/product/" + id + "/image";
+    }
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

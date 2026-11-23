@@ -33,9 +33,7 @@ const Product = () => {
         const reviewResponse = await API.get(`/product/${id}/reviews`);
         setReviews(reviewResponse.data);
         
-        const primaryUrl = productData.imageData 
-          ? `data:${productData.imageType};base64,${productData.imageData}`
-          : unplugged;
+        const primaryUrl = productData.imageUrl || unplugged;
         setMainImageUrl(primaryUrl);
 
         if (productData.gallery && productData.gallery.length > 0) {
@@ -274,7 +272,7 @@ const Product = () => {
           </Col>
         </Row>
       </Container>
-      {recommendations.length > 0 && <Container className="mt-5"><h2 className="h4 fw-black text-uppercase mb-3">Picked from what you’ve viewed and added</h2><div className="row g-3">{recommendations.map(item => <div className="col-6 col-md-3" key={item.id}><Link className="d-block border p-3 h-100 text-decoration-none text-dark" to={`/product/${item.id}`}><img src={item.imageData ? `data:${item.imageType};base64,${item.imageData}` : unplugged} alt={item.name} className="w-100 bg-light mb-2" style={{ height: 150, objectFit: "contain" }} /><strong>{item.name}</strong><div>₹{getSalePrice(item)} {getDiscountPercentage(item) > 0 && <small className="text-danger">{getDiscountPercentage(item)}% OFF</small>}</div></Link></div>)}</div></Container>}
+      {recommendations.length > 0 && <Container className="mt-5"><h2 className="h4 fw-black text-uppercase mb-3">Picked from what you’ve viewed and added</h2><div className="row g-3">{recommendations.map(item => <div className="col-6 col-md-3" key={item.id}><Link className="d-block border p-3 h-100 text-decoration-none text-dark" to={`/product/${item.id}`}><img src={item.imageUrl || unplugged} alt={item.name} className="w-100 bg-light mb-2" style={{ height: 150, objectFit: "contain" }} /><strong>{item.name}</strong><div>₹{getSalePrice(item)} {getDiscountPercentage(item) > 0 && <small className="text-danger">{getDiscountPercentage(item)}% OFF</small>}</div></Link></div>)}</div></Container>}
 
       <style>{`
         .fw-black { font-weight: 900 !important; }

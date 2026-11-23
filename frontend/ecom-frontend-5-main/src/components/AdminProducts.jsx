@@ -117,7 +117,7 @@ const AdminProducts = () => {
                                     <div className="d-flex align-items-center py-2">
                                         <div className="border border-dark p-1 me-3 bg-light">
                                             <img 
-                                                src={product.imageData ? `data:${product.imageType};base64,${product.imageData}` : unplugged} 
+                                                src={product.imageUrl || unplugged}
                                                 alt={product.name} 
                                                 style={{ width: '50px', height: '50px', objectFit: 'contain' }} 
                                             />

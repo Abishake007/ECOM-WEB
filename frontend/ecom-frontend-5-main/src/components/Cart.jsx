@@ -100,7 +100,7 @@ const Cart = () => {
                       <div className="col-4 col-md-3">
                         <div className="bg-light p-2 text-center">
                           <img 
-                            src={item.imageUrl || (item.imageData ? `data:${item.imageType};base64,${item.imageData}` : unplugged)} 
+                            src={item.imageUrl || unplugged}
                             alt={item.name} 
                             className="img-fluid"
                             style={{ maxHeight: "150px", objectFit: "contain" }} 

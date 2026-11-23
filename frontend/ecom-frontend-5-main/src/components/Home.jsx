@@ -21,8 +21,6 @@ const Home = ({ selectedCategory, onSelectCategory, onClearCategory }) => {
   const categoryViewportRef = useRef(null);
   const categoryCardRefs = useRef([]);
 
-  useEffect(() => { refreshData(); }, []);
-
   const addToWishlist = async (productId) => {
     const user = AuthService.getCurrentUser();
     if (!user?.accessToken && !user?.token && !user?.jwt) {
@@ -66,7 +64,7 @@ const Home = ({ selectedCategory, onSelectCategory, onClearCategory }) => {
     if (data && data.length > 0) {
       setProducts(data.map(p => ({
         ...p,
-        imageUrl: p.imageData ? `data:${p.imageType};base64,${p.imageData}` : unplugged
+        imageUrl: p.imageUrl || unplugged
       })));
     }
   }, [data]);
@@ -95,8 +93,8 @@ const Home = ({ selectedCategory, onSelectCategory, onClearCategory }) => {
     .sort((a, b) => a.localeCompare(b))
     .map(category => {
       const categoryProducts = products.filter(item => item.category?.trim().toLowerCase() === category.toLowerCase());
-      const imageProduct = categoryProducts.find(item => item.imageData) || categoryProducts[0];
-      return { category, image: imageProduct?.imageData ? `data:${imageProduct.imageType};base64,${imageProduct.imageData}` : (imageProduct?.imageUrl || unplugged) };
+      const imageProduct = categoryProducts.find(item => item.imageUrl) || categoryProducts[0];
+      return { category, image: imageProduct?.imageUrl || unplugged };
     });
   useEffect(() => {
     if (!categoryCards.length || selectedCategory) return undefined;

@@ -11,11 +11,22 @@ import java.util.List;
 @Repository
 public interface ProductRepo extends JpaRepository<Product, Integer> {
 
+    @Query("SELECT p.id AS id, p.name AS name, p.description AS description, " +
+            "p.brand AS brand, p.price AS price, p.discountPercentage AS discountPercentage, " +
+            "p.category AS category, p.releaseDate AS releaseDate, " +
+            "p.productAvailable AS productAvailable, p.stockQuantity AS stockQuantity " +
+            "FROM Product p")
+    List<ProductSummary> findAllSummaries();
+
     // Custom JPQL search for the marketplace global search bar
-    @Query("SELECT p FROM Product p WHERE " +
+    @Query("SELECT p.id AS id, p.name AS name, p.description AS description, " +
+            "p.brand AS brand, p.price AS price, p.discountPercentage AS discountPercentage, " +
+            "p.category AS category, p.releaseDate AS releaseDate, " +
+            "p.productAvailable AS productAvailable, p.stockQuantity AS stockQuantity " +
+            "FROM Product p WHERE " +
             "LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(p.brand) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(p.category) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    List<Product> searchProducts(@Param("keyword") String keyword);
+    List<ProductSummary> searchProducts(@Param("keyword") String keyword);
 }

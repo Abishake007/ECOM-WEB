@@ -4,6 +4,7 @@ import com.telusko.ecom_proj.model.Product;
 import com.telusko.ecom_proj.model.ProductImage;
 import com.telusko.ecom_proj.payload.response.MessageResponse;
 import com.telusko.ecom_proj.repo.ProductImageRepository;
+import com.telusko.ecom_proj.repo.ProductSummary;
 import com.telusko.ecom_proj.repo.UserRepository;
 import com.telusko.ecom_proj.security.services.UserDetailsImpl;
 import com.telusko.ecom_proj.service.ProductService;
@@ -33,7 +34,7 @@ public class ProductController {
     private ProductImageRepository imageRepo;
 
     @GetMapping("/products")
-    public ResponseEntity<List<Product>> getAllProduct() {
+    public ResponseEntity<List<ProductSummary>> getAllProduct() {
         return new ResponseEntity<>(service.getAllProducts(), HttpStatus.OK);
     }
 
@@ -135,8 +136,8 @@ public ResponseEntity<byte[]> getGalleryImage(@PathVariable Long imageId) {
      * Global Search endpoint for the Amazon-style header.
      */
     @GetMapping("/products/search")
-    public ResponseEntity<List<Product>> searchProducts(@RequestParam String keyword) {
-        List<Product> products = service.searchProduct(keyword);
+    public ResponseEntity<List<ProductSummary>> searchProducts(@RequestParam String keyword) {
+        List<ProductSummary> products = service.searchProduct(keyword);
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 }
