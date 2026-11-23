@@ -1,8 +1,11 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://ecom-web-knao.onrender.com/api",
- // baseURL: "http://localhost:8080/api"
+  baseURL: import.meta.env.VITE_API_BASE_URL || (
+    import.meta.env.DEV
+      ? "http://localhost:8080/api"
+      : "https://ecom-web-knao.onrender.com/api"
+  ),
 });
 
 API.interceptors.request.use((config) => {
