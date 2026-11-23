@@ -64,6 +64,7 @@ const OrderHistory = () => {
                       <div style={{ fontSize: '10px' }}>Ship To</div>
                       <div className="text-primary cursor-pointer">Account Holder</div>
                     </div>
+                    <div><div style={{ fontSize: '10px' }}>Payment</div><div className="text-dark">{order.paymentMethod === 'COD' ? 'Cash on delivery' : 'Online'}</div></div>
                   </div>
                   <div className="text-end small">
                     <div className="text-muted fw-bold text-uppercase" style={{ fontSize: '10px' }}>Order # ORD-{order.id}</div>
@@ -94,6 +95,7 @@ const OrderHistory = () => {
                       <Button variant="outline-dark" className="w-100 fw-bold rounded-pill shadow-sm">
                         Write a product review
                       </Button>
+                      <Link to={`/support?orderId=${order.id}`} className="btn btn-outline-secondary w-100 fw-bold rounded-pill">Contact support / report a problem</Link>
                     </Col>
                   </Row>
                 </Card.Body>

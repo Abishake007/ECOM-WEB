@@ -187,6 +187,7 @@ const Home = ({ selectedCategory, onClearCategory }) => {
               <Link to="/" onClick={onClearCategory}>Shop all</Link>
               <Link to="/wishlist">Wishlist</Link>
               <Link to="/orders">Orders</Link>
+              <Link to="/support">Customer support</Link>
             </div>
             <div className="col-12 col-lg-5">
               <h2 className="home-footer-heading">Get the KLYRO newsletter</h2>

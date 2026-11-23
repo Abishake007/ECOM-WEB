@@ -61,6 +61,7 @@ const AdminOrders = () => {
               <th className="border-0">Customer</th>
               <th className="border-0">Date</th>
               <th className="border-0">Amount</th>
+              <th className="border-0">Payment</th>
               <th className="border-0">Status</th>
               <th className="text-center border-0 pe-4">Action</th>
             </tr>
@@ -68,7 +69,7 @@ const AdminOrders = () => {
           <tbody>
             {orders.length === 0 ? (
               <tr>
-                <td colSpan="6" className="text-center py-5 Oswald-font fw-bold text-muted text-uppercase">
+                <td colSpan="7" className="text-center py-5 Oswald-font fw-bold text-muted text-uppercase">
                   No orders found in the system.
                 </td>
               </tr>
@@ -84,6 +85,7 @@ const AdminOrders = () => {
                   </td>
                   <td className="small fw-bold">{new Date(order.orderDate).toLocaleDateString()}</td>
                   <td className="fw-black Oswald-font">₹{order.totalAmount?.toFixed(2)}</td>
+                  <td><Badge bg={order.paymentMethod === 'COD' ? 'warning' : 'dark'} text={order.paymentMethod === 'COD' ? 'dark' : undefined}>{order.paymentMethod === 'COD' ? 'CASH ON DELIVERY' : 'ONLINE'}</Badge></td>
                   <td>{getStatusBadge(order.status)}</td>
                   <td className="text-center pe-4">
                     <select aria-label={`Update order ${order.id} delivery status`} className="form-select form-select-sm" value={order.status?.toUpperCase() || "PROCESSING"} onChange={event => updateStatus(order.id, event.target.value)}>

@@ -36,6 +36,12 @@ public class OrderService {
         Order order = new Order();
         order.setUser(user);
         order.setStatus("PROCESSING");
+        String paymentMethod = orderRequest.getPaymentMethod() == null
+                ? "STRIPE" : orderRequest.getPaymentMethod().trim().toUpperCase();
+        if (!paymentMethod.equals("STRIPE") && !paymentMethod.equals("COD")) {
+            throw new IllegalArgumentException("Choose a valid payment method.");
+        }
+        order.setPaymentMethod(paymentMethod);
         order.setOrderDate(new Date());
         order.setShippingAddress(orderRequest.getShippingAddress());
         order.setPhoneNumber(orderRequest.getPhoneNumber());

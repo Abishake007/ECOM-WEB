@@ -11,6 +11,7 @@ public class OrderRequest {
     private String shippingAddress;
     private String phoneNumber;
     private String couponCode;
+    private String paymentMethod;
 
     @Data
     public static class CartItemRequest {

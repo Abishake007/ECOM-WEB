@@ -32,22 +32,25 @@ const Cart = () => {
     setCouponMessage(`${code} applied: ₹${amount.toFixed(2)} off.`);
   };
 
-  const completeCheckout = async (shippingDetails) => {
+  const completeCheckout = async (shippingDetails, paymentMethod = "STRIPE") => {
     try {
       const address = shippingDetails.address;
-      const shippingAddress = [address.line1, address.line2, address.city, address.state, address.postal_code, address.country].filter(Boolean).join(", ");
+      const shippingAddress = [shippingDetails.name, address.line1, address.line2, address.city, address.state, address.postal_code, address.country].filter(Boolean).join(", ");
       await API.post("/orders", {
-        totalAmount: Number((total + shipping - discount).toFixed(2)), couponCode: discount ? coupon.trim().toUpperCase() : "", shippingAddress,
+        couponCode: discount ? coupon.trim().toUpperCase() : "", paymentMethod, shippingAddress,
         phoneNumber: shippingDetails.phone || "",
         items: cart.map(item => ({ productId: item.id, quantity: item.quantity || 1 }))
       });
       clearCart();
       refreshData();
-      notify("Payment complete. Your order is being processed.");
+      notify(paymentMethod === "COD" ? "Order placed. Pay the delivery partner when it arrives." : "Payment complete. Your order is being processed.");
       setShowPopup(false);
       navigate("/orders");
     } catch (error) {
-      notify(error.response?.data || "Payment succeeded, but order confirmation failed. Contact support with your payment receipt.", "error");
+      const message = typeof error.response?.data === "string" ? error.response.data : error.response?.data?.message;
+      const fallback = paymentMethod === "COD" ? "We could not place your order. Please try again." : "Payment succeeded, but order confirmation failed. Contact support with your payment receipt.";
+      notify(message || fallback, "error");
+      if (paymentMethod === "COD") throw new Error(message || fallback);
     }
   };
 

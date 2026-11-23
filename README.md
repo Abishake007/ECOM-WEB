@@ -237,3 +237,11 @@ mvn test                 # Run tests
 - Verify MySQL service is running
 - Check database URL and credentials
 - Ensure database `ecom_web` exists
+
+## COD and support email setup
+
+Before deploying the backend changes, run `backend/ecom-proj/database/2026-11-add-order-payment-method.sql` once in the TiDB SQL editor. The application uses Hibernate schema validation, so it will not start until the `orders.payment_method` column exists.
+
+In Render, add `ADMIN_NOTIFICATION_EMAIL` with the mailbox where you want new order and customer support notifications delivered. Keep `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and `BREVO_SENDER_NAME` configured; the Brevo key needs permission to send transactional email. After the database migration and Render environment variables are set, deploy the backend and frontend.
+
+Before deploying the review ownership change, also run `backend/ecom-proj/database/2026-11-add-review-author.sql` once in TiDB. It adds the author reference used to allow deletion only by that reviewer or an admin, and backfills existing reviews when the username matches.

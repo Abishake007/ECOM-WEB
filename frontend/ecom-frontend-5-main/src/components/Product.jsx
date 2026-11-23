@@ -4,6 +4,7 @@ import API from "../axios";
 import AppContext from "../Context/Context";
 import { Container, Row, Col, Button, Badge, Spinner, Card } from "react-bootstrap";
 import unplugged from "../assets/unplugged.png";
+import AuthService from "../services/auth.service";
 
 const Product = () => {
   const { id } = useParams();
@@ -16,6 +17,9 @@ const Product = () => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [reviewMessage, setReviewMessage] = useState("");
+  const currentUser = AuthService.getCurrentUser();
+  const currentUserId = currentUser?.id ?? currentUser?.userId;
+  const isAdmin = currentUser?.roles?.includes("ROLE_ADMIN");
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -60,6 +64,17 @@ const Product = () => {
       setReviewMessage("Your review has been added.");
     } catch (error) {
       setReviewMessage(error.response?.status === 401 ? "Sign in to leave a review." : (error.response?.data || "Could not submit your review."));
+    }
+  };
+
+  const deleteReview = async (review) => {
+    if (!window.confirm("Delete this review?")) return;
+    try {
+      await API.delete(`/product/${id}/reviews/${review.id}`);
+      setReviews(current => current.filter(item => item.id !== review.id));
+      setReviewMessage("Review deleted.");
+    } catch (error) {
+      setReviewMessage(error.response?.status === 403 ? "Only the review author or an admin can delete this review." : "Could not delete the review.");
     }
   };
 
@@ -179,6 +194,7 @@ const Product = () => {
                   {product.description || "Premium quality build and aesthetic. Designed for performance and style."}
                 </p>
               </div>
+              <p className="small mb-4"><Link to={`/support?productId=${product.id}`} className="text-dark">Questions or a problem with this product? Contact support.</Link></p>
 
               {/* ACTION BOX: Bold Black Button */}
               <div className="p-0 sticky-md-top" style={{ top: '160px', zIndex: '10' }}>
@@ -213,7 +229,9 @@ const Product = () => {
                     <div key={review.id} className="mb-4 pb-4 border-bottom">
                         <div className="d-flex justify-content-between align-items-center mb-2">
                           <span className="fw-black text-uppercase small">{review.reviewerName}</span>
-                          <span className="small text-muted fw-bold" style={{ fontSize: '10px' }}>{new Date(review.createdAt).toLocaleDateString()}</span>
+                          <div className="d-flex align-items-center gap-3"><span className="small text-muted fw-bold" style={{ fontSize: '10px' }}>{new Date(review.createdAt).toLocaleDateString()}</span>
+                            {(isAdmin || (currentUserId && Number(review.reviewerUserId) === Number(currentUserId))) && <Button size="sm" variant="outline-danger" onClick={() => deleteReview(review)}>Delete</Button>}
+                          </div>
                         </div>
                         <div className="text-dark mb-2" style={{ fontSize: '0.8rem' }}>
                           {[...Array(5)].map((_, i) => (

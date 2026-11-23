@@ -26,6 +26,8 @@ public class Order {
 
     private BigDecimal totalAmount;
     private String status;
+    @Column(name = "payment_method", nullable = false, length = 32)
+    private String paymentMethod;
     private Date orderDate;
 
     private String shippingAddress;

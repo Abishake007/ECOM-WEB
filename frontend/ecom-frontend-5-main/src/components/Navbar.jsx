@@ -78,6 +78,7 @@ const Navbar = ({ onSelectCategory }) => {
           )}
           <Link to="/wishlist" className="text-decoration-none text-dark hover-underline">Wishlist</Link>
           <Link to="/orders" className="text-decoration-none text-dark hover-underline">Orders</Link>
+          <Link to="/support" className="text-decoration-none text-dark hover-underline">Support</Link>
           {showAdminBoard && <Link to="/admin" className="text-decoration-none text-danger fw-black">Admin Central</Link>}
         </div>
       </div>

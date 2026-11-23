@@ -25,25 +25,39 @@ public class EmailService {
     @Value("${BREVO_SENDER_NAME:KLYRO}")
     private String senderName;
 
+    @Value("${ADMIN_NOTIFICATION_EMAIL:}")
+    private String adminNotificationEmail;
+
     public void sendOrderConfirmationEmail(Order order) {
         if (order.getUser() == null || order.getUser().getEmail() == null) return;
-        StringBuilder html = new StringBuilder();
-        html.append("<h1>Thank you for your KLYRO order!</h1>")
-                .append("<p>Hi ").append(escapeHtml(order.getUser().getUsername())).append(",</p>")
-                .append("<p>Your order #").append(order.getId()).append(" is being processed.</p>")
-                .append("<h3>Shipping information</h3><p>")
-                .append(escapeHtml(order.getShippingAddress())).append("</p>")
-                .append("<h3>Order summary</h3><ul>");
+        StringBuilder items = new StringBuilder("<table><tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Line total</th></tr>");
         if (order.getOrderItems() != null) {
             for (OrderItem item : order.getOrderItems()) {
-                html.append("<li>").append(escapeHtml(item.getProduct().getName()))
-                        .append(" × ").append(item.getQuantity()).append("</li>");
+                items.append("<tr><td>").append(escapeHtml(item.getProduct().getName()))
+                        .append("</td><td>").append(item.getQuantity())
+                        .append("</td><td>").append(item.getPrice())
+                        .append("</td><td>").append(item.getPrice().multiply(java.math.BigDecimal.valueOf(item.getQuantity())))
+                        .append("</td></tr>");
             }
         }
-        html.append("</ul><p>Total: ").append(order.getTotalAmount()).append("</p>");
-        send(order.getUser().getEmail(), "KLYRO order confirmation #" + order.getId(), html.toString());
+        items.append("</table>");
+        String details = "<p>Order #" + order.getId() + "</p><p>Customer: "
+                + escapeHtml(order.getUser().getUsername()) + " (" + escapeHtml(order.getUser().getEmail()) + ")</p>"
+                + "<p>Payment: " + escapeHtml(order.getPaymentMethod())
+                + ("COD".equals(order.getPaymentMethod()) ? " (collect on delivery)" : " (paid online)")
+                + "</p><h3>Delivery details</h3><p>" + escapeHtml(order.getShippingAddress())
+                + "</p><p>Phone: " + escapeHtml(order.getPhoneNumber()) + "</p><h3>Items</h3>" + items
+                + "<p><strong>Order total: " + order.getTotalAmount() + "</strong></p>";
+        send(order.getUser().getEmail(), "KLYRO order confirmation #" + order.getId(), "<h1>Thank you for your KLYRO order!</h1>" + details);
+        String adminRecipient = adminNotificationEmail == null || adminNotificationEmail.isBlank() ? senderEmail : adminNotificationEmail;
+        if (adminRecipient != null && !adminRecipient.isBlank()) {
+            send(adminRecipient, "New KLYRO order #" + order.getId(), "<h1>New order received</h1>" + details);
+        }
     }
 
+    public boolean sendSupportNotification(String recipient, String subject, String html) {
+        return send(recipient, subject, html);
+    }
     public void sendPasswordResetEmail(String email, String resetUrl) {
         String html = "<h1>Reset your KLYRO password</h1>"
                 + "<p>This link expires in 15 minutes.</p>"
@@ -52,10 +66,10 @@ public class EmailService {
         send(email, "Reset your KLYRO password", html);
     }
 
-    private void send(String recipient, String subject, String htmlContent) {
+    private boolean send(String recipient, String subject, String htmlContent) {
         if (apiKey == null || apiKey.isBlank() || senderEmail == null || senderEmail.isBlank()) {
             System.err.println("Brevo email is not configured: set BREVO_API_KEY and BREVO_SENDER_EMAIL.");
-            return;
+            return false;
         }
 
         try {
@@ -75,12 +89,16 @@ public class EmailService {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 System.err.println("Brevo email request failed with HTTP " + response.statusCode() + ": " + response.body());
+                return false;
             }
+            return true;
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             System.err.println("Brevo email request was interrupted.");
+            return false;
         } catch (Exception exception) {
             System.err.println("Brevo email request failed: " + exception.getMessage());
+            return false;
         }
     }
 
