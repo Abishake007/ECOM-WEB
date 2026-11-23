@@ -4,6 +4,7 @@ import AppContext from "../Context/Context";
 import { Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import unplugged from "../assets/unplugged.png";
 import { Link } from "react-router-dom";
+import { getDiscountPercentage, getSalePrice } from "../utils/pricing";
 
 const Wishlist = () => {
   const { addToCart } = useContext(AppContext); 
@@ -46,7 +47,7 @@ const Wishlist = () => {
   );
 
   return (
-    <div className="wishlist-wrapper bg-white" style={{ minHeight: "100vh", paddingTop: "140px", paddingBottom: "80px" }}>
+    <div className="wishlist-wrapper bg-white" style={{ minHeight: "100vh", paddingTop: "24px", paddingBottom: "80px" }}>
       <Container>
         {/* Adidas Header Style */}
         <div className="d-flex justify-content-between align-items-end border-bottom border-dark pb-3 mb-5">
@@ -112,7 +113,8 @@ const Wishlist = () => {
                       </div>
                       
                       <div className="mt-3">
-                        <h5 className="fw-black Oswald-font mb-3">₹{product.price}</h5>
+                        <h5 className="fw-black Oswald-font mb-1">{"\u20B9"}{getSalePrice(product)}</h5>
+                        {getDiscountPercentage(product) > 0 && <small className="text-danger fw-bold d-block mb-3">{getDiscountPercentage(product)}% OFF</small>}
                         
                         <Button 
                           variant="dark" 

@@ -27,6 +27,8 @@ public class Product {
     
     private String brand;
     private BigDecimal price;
+    @Column(name = "discount_percentage", nullable = false)
+    private Integer discountPercentage = 0;
     private String category;
     private Date releaseDate;
     private Boolean productAvailable;

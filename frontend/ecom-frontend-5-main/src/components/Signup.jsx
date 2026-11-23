@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import AuthService from "../services/auth.service";
 
 const Signup = () => {
@@ -11,6 +11,7 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleRegister = (e) => {
     e.preventDefault();
@@ -30,7 +31,7 @@ const Signup = () => {
         setSuccessful(true);
         setLoading(false);
         setTimeout(() => {
-          navigate("/login");
+          navigate(`/login${location.search}`, { state: location.state });
         }, 2000);
       },
       (error) => {

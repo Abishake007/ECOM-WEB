@@ -1,11 +1,13 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import AppContext from "../Context/Context";
 import unplugged from "../assets/unplugged.png";
 import API from "../axios";
+import AuthService from "../services/auth.service";
+import { getDiscountPercentage, getSalePrice } from "../utils/pricing";
 
-const Home = ({ selectedCategory, onClearCategory }) => {
-  const { data, addToCart, refreshData, notify } = useContext(AppContext);
+const Home = ({ selectedCategory, onSelectCategory, onClearCategory }) => {
+  const { data, cart, addToCart, refreshData, notify } = useContext(AppContext);
   const [products, setProducts] = useState([]);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [sortBy, setSortBy] = useState("featured");
@@ -15,19 +17,49 @@ const Home = ({ selectedCategory, onClearCategory }) => {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [recentIds] = useState(() => JSON.parse(localStorage.getItem("klyro-recently-viewed") || "[]"));
+  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
+  const categoryViewportRef = useRef(null);
+  const categoryCardRefs = useRef([]);
 
   useEffect(() => { refreshData(); }, []);
 
   const addToWishlist = async (productId) => {
+    const user = AuthService.getCurrentUser();
+    if (!user?.accessToken && !user?.token && !user?.jwt) {
+      sessionStorage.setItem("klyro-pending-wishlist-product", String(productId));
+      window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
     try {
       await API.post(`/wishlist/add/${productId}`);
       notify("Added to your wishlist");
     } catch (err) { notify("Please sign in to save items to your wishlist", "error"); }
   };
 
+  useEffect(() => {
+    const pendingProductId = sessionStorage.getItem("klyro-pending-wishlist-product");
+    const user = AuthService.getCurrentUser();
+    if (!pendingProductId || !data.length || (!user?.accessToken && !user?.token && !user?.jwt)) return;
+    sessionStorage.removeItem("klyro-pending-wishlist-product");
+    addToWishlist(Number(pendingProductId));
+  }, [data]);
+
   const handleNewsletterSubmit = (event) => {
     event.preventDefault();
     notify("Newsletter signup is not connected yet. Please check back soon.", "error");
+  };
+
+  const viewAllProducts = () => {
+    onClearCategory();
+    setSearchText("");
+    setBrandFilter("");
+    setMinPrice("");
+    setMaxPrice("");
+    setAvailableOnly(false);
+    setSortBy("featured");
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+      document.getElementById("product-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }));
   };
 
   useEffect(() => {
@@ -54,9 +86,65 @@ const Home = ({ selectedCategory, onClearCategory }) => {
     return 0;
   });
   const recentlyViewed = recentIds.map(id => products.find(p => String(p.id) === String(id))).filter(Boolean).slice(0, 6);
+  const categoriesByKey = new Map();
+  products.forEach(item => {
+    const category = item.category?.trim();
+    if (category && !categoriesByKey.has(category.toLowerCase())) categoriesByKey.set(category.toLowerCase(), category);
+  });
+  const categoryCards = [...categoriesByKey.values()]
+    .sort((a, b) => a.localeCompare(b))
+    .map(category => {
+      const categoryProducts = products.filter(item => item.category?.trim().toLowerCase() === category.toLowerCase());
+      const imageProduct = categoryProducts.find(item => item.imageData) || categoryProducts[0];
+      return { category, image: imageProduct?.imageData ? `data:${imageProduct.imageType};base64,${imageProduct.imageData}` : (imageProduct?.imageUrl || unplugged) };
+    });
+  useEffect(() => {
+    if (!categoryCards.length || selectedCategory) return undefined;
+    const initialIndex = categoryCards.length > 4 ? 2 : 1;
+    const nextIndex = categoryCards.length > 1 && activeCategoryIndex === 0
+      ? initialIndex : Math.min(activeCategoryIndex, categoryCards.length - 1);
+    if (nextIndex !== activeCategoryIndex) {
+      setActiveCategoryIndex(nextIndex);
+      return undefined;
+    }
+    const centerActiveCard = () => {
+      const viewport = categoryViewportRef.current;
+      const card = categoryCardRefs.current[nextIndex];
+      if (!viewport || !card) return;
+      const viewportRect = viewport.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+      const targetLeft = viewport.scrollLeft + cardRect.left - viewportRect.left - (viewport.clientWidth - cardRect.width) / 2;
+      const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+      viewport.scrollTo({ left: Math.max(0, Math.min(targetLeft, maxScroll)), behavior: "smooth" });
+    };
+    centerActiveCard();
+    window.addEventListener("resize", centerActiveCard);
+    return () => window.removeEventListener("resize", centerActiveCard);
+  }, [categoryCards.length, activeCategoryIndex, selectedCategory]);
+
+  const showCategory = (index) => {
+    const safeIndex = (index + categoryCards.length) % categoryCards.length;
+    setActiveCategoryIndex(safeIndex);
+    onSelectCategory(categoryCards[safeIndex].category);
+    window.setTimeout(() => document.getElementById("category-results")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+  };
+  const behaviorItems = [...recentlyViewed, ...cart];
+  const behaviorIds = new Set(behaviorItems.map(item => String(item.id)));
+  const categoryInterests = new Set(behaviorItems.map(item => item.category?.trim().toLowerCase()).filter(Boolean));
+  const brandInterests = new Set(behaviorItems.map(item => item.brand?.trim().toLowerCase()).filter(Boolean));
+  const personalizedRecommendations = behaviorItems.length ? products
+    .filter(item => !behaviorIds.has(String(item.id)))
+    .map(item => ({
+      ...item,
+      interestScore: (categoryInterests.has(item.category?.trim().toLowerCase()) ? 3 : 0)
+        + (brandInterests.has(item.brand?.trim().toLowerCase()) ? 2 : 0)
+    }))
+    .filter(item => item.interestScore > 0)
+    .sort((a, b) => b.interestScore - a.interestScore)
+    .slice(0, 6) : [];
 
   return (
-    <div className="home-wrapper" style={{ backgroundColor: "#eaeded", minHeight: "100vh", paddingBottom: "50px" }}>
+    <div className="home-wrapper" style={{ backgroundColor: "#eaeded", minHeight: "100vh" }}>
       
       {/* 1. Modern Hero Banner - Responsive Height & Gradient Fade */}
       {!selectedCategory && (
@@ -81,11 +169,15 @@ const Home = ({ selectedCategory, onClearCategory }) => {
       <div 
         className="container-fluid px-lg-5" 
         style={{ 
-          marginTop: selectedCategory ? "120px" : "-12vw", // Dynamic overlap based on screen width
+          marginTop: selectedCategory ? "24px" : "-12vw", // Dynamic overlap based on screen width
           position: "relative", 
           zIndex: 2 
         }}
       >
+        {selectedCategory && <div id="category-results" className="d-flex flex-wrap align-items-center justify-content-between gap-2 bg-white p-3 mb-3 border">
+          <div><h1 className="h4 fw-bold text-uppercase mb-1">{selectedCategory}</h1><p className="small text-muted mb-0">Browse products in this category.</p></div>
+          <button type="button" className="btn btn-outline-dark btn-sm" onClick={viewAllProducts}>View all products</button>
+        </div>}
         <div className="d-flex flex-wrap align-items-center gap-2 bg-white p-3 mb-3 border">
           <input className="form-control" style={{ maxWidth: 260 }} value={searchText} onChange={e => setSearchText(e.target.value)} placeholder="Search products, brands..." aria-label="Filter products" />
           <select className="form-select" style={{ maxWidth: 210 }} value={sortBy} onChange={e => setSortBy(e.target.value)} aria-label="Sort products">
@@ -97,13 +189,47 @@ const Home = ({ selectedCategory, onClearCategory }) => {
           <label className="d-flex align-items-center gap-2 small fw-bold ms-md-auto"><input type="checkbox" checked={availableOnly} onChange={e => setAvailableOnly(e.target.checked)} /> In stock only</label>
           <span className="small text-muted">{visibleProducts.length} products</span>
         </div>
-        <div className="row g-3">
+        {!selectedCategory && categoryCards.length > 0 && <section className="shop-category-section mb-4 p-3 p-md-4">
+          <div className="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
+            <div><h2 className="h5 fw-bold text-uppercase mb-1">Shop by category</h2><p className="small mb-0">Choose a category to browse its products.</p></div>
+            <button type="button" className="btn btn-sm btn-outline-light" onClick={viewAllProducts}>View all products</button>
+          </div>
+          <div className="shop-category-carousel position-relative">
+            <div className="shop-category-viewport" ref={categoryViewportRef}>
+              <div className="shop-category-track">
+                {categoryCards.map(({ category, image }, index) => <button type="button" ref={element => { categoryCardRefs.current[index] = element; }} key={category} className={`shop-category-card${activeCategoryIndex === index ? " is-active" : ""}`} onClick={() => showCategory(index)} aria-label={`Browse ${category} products`}>
+                  <img src={image} alt="" loading="lazy" />
+                  <span>{category}</span>
+                </button>)}
+              </div>
+            </div>
+            {categoryCards.length > 1 && <>
+              <button type="button" className="shop-category-arrow shop-category-arrow-prev" aria-label="Previous categories" onClick={() => setActiveCategoryIndex(index => (index - 1 + categoryCards.length) % categoryCards.length)}><i className="bi bi-chevron-left" /></button>
+              <button type="button" className="shop-category-arrow shop-category-arrow-next" aria-label="Next categories" onClick={() => setActiveCategoryIndex(index => (index + 1) % categoryCards.length)}><i className="bi bi-chevron-right" /></button>
+            </>}
+          </div>
+          {categoryCards.length > 1 && <div className="shop-category-dots" aria-label="Choose a category slide">{categoryCards.map(({ category }, index) => <button type="button" key={category} className={activeCategoryIndex === index ? "is-active" : ""} aria-label={`Show ${category}`} aria-current={activeCategoryIndex === index ? "true" : undefined} onClick={() => setActiveCategoryIndex(index)} />)}</div>}
+        </section>}
+        {!selectedCategory && recentlyViewed.length > 0 && <section className="mb-4 bg-white p-4 border">
+          <h2 className="h5 fw-bold text-uppercase mb-3">Recently viewed</h2>
+          <div className="d-flex gap-3 overflow-auto">{recentlyViewed.map(p => <Link key={p.id} to={`/product/${p.id}`} className="text-dark text-decoration-none border p-2 flex-shrink-0" style={{ width: 170 }}>
+            <img src={p.imageUrl || unplugged} alt={p.name} className="w-100 bg-light mb-2" style={{ height: 100, objectFit: "contain" }} />
+            <div className="small text-truncate">{p.name}</div><strong>₹{getSalePrice(p)}</strong>{getDiscountPercentage(p) > 0 && <small className="text-danger fw-bold">{getDiscountPercentage(p)}% OFF</small>}
+          </Link>)}</div>
+        </section>}
+        {!selectedCategory && personalizedRecommendations.length > 0 && <section className="mb-4 bg-white p-4 border">
+          <h2 className="h5 fw-bold text-uppercase mb-3">Picked from what you’ve viewed and added</h2>
+          <div className="row g-3">{personalizedRecommendations.map(p => <div className="col-6 col-md-4 col-lg-2" key={p.id}><Link to={`/product/${p.id}`} className="d-block h-100 p-2 border text-dark text-decoration-none">
+            <img src={p.imageUrl || unplugged} alt={p.name} className="w-100 bg-light mb-2" style={{ height: 110, objectFit: "contain" }} /><div className="small text-truncate">{p.name}</div><strong>₹{getSalePrice(p)}</strong>{getDiscountPercentage(p) > 0 && <small className="text-danger fw-bold d-block">{getDiscountPercentage(p)}% OFF</small>}
+          </Link></div>)}</div>
+        </section>}
+        <div className="row g-3" id="product-results">
           {visibleProducts.length > 0 ? (
             visibleProducts.map((product) => (
               <div className="col-6 col-md-4 col-lg-3 col-xl-2 mb-2" key={product.id}>
                 {/* Modern Card Design */}
-                <div className="product-card h-100 bg-white p-3 border-0 transition-all shadow-hover">
-                  <Link to={`/product/${product.id}`} className="text-decoration-none text-dark h-100 d-flex flex-column">
+                <div className="product-card h-100 d-flex flex-column bg-white p-3 border-0 transition-all shadow-hover">
+                  <Link to={`/product/${product.id}`} className="product-card-link text-decoration-none text-dark d-flex flex-column flex-grow-1">
                     
                     {/* Category Tag */}
                     <span className="text-muted text-uppercase mb-1" style={{ fontSize: '10px', letterSpacing: '1px' }}>
@@ -124,28 +250,30 @@ const Home = ({ selectedCategory, onClearCategory }) => {
                         alt={product.name}
                       />
                     </div>
+                  </Link>
 
                     {/* Price & Action Footer */}
-                    <div className="mt-auto pt-3 border-top">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
+                    <div className="product-card-footer mt-auto pt-3 border-top">
+                      <div className="product-card-price-row mb-2">
                         <div className="d-flex flex-column">
-                          <h5 className="fw-bold mb-0 text-dark">₹{product.price}</h5>
-                          <span className="text-muted" style={{ fontSize: '10px', textDecoration: 'line-through' }}>
-                            ₹{Math.floor(product.price * 1.2)}
-                          </span>
+                          <div className="d-flex flex-column"><h5 className="fw-bold mb-0 text-dark">₹{getSalePrice(product)}</h5>{getDiscountPercentage(product) > 0 && <small className="text-muted text-decoration-line-through">₹{product.price}</small>}</div>
                         </div>
                         
-                        <div className="d-flex gap-1">
+                        <div className="product-card-actions">
                           <button 
-                            className="btn btn-sm btn-outline-secondary border-0 p-1" 
-                            onClick={(e) => { e.preventDefault(); addToWishlist(product.id); }}
+                            type="button"
+                            className="product-card-wishlist btn btn-outline-secondary border"
+                            aria-label={`Add ${product.name} to wishlist`}
+                            onClick={() => addToWishlist(product.id)}
                           >
                             <i className="bi bi-heart"></i>
                           </button>
                           <button 
-                            className="btn btn-sm btn-warning fw-bold px-3 shadow-sm rounded-1"
+                            type="button"
+                            className="product-card-add btn btn-warning fw-bold px-3 shadow-sm rounded-1"
+                            aria-label={`Add ${product.name} to bag`}
                             disabled={!product.productAvailable || Number(product.stockQuantity) <= 0}
-                            onClick={(e) => { e.preventDefault(); addToCart(product); }}
+                            onClick={() => addToCart(product)}
                             style={{ fontSize: '12px' }}
                           >
                             {Number(product.stockQuantity) > 0 ? "ADD" : "SOLD OUT"}
@@ -153,14 +281,14 @@ const Home = ({ selectedCategory, onClearCategory }) => {
                         </div>
                       </div>
                       
-                      <div className="d-flex align-items-center gap-1">
-                        <i className="bi bi-truck text-primary" style={{ fontSize: '12px' }}></i>
-                        <small className="text-primary fw-bold" style={{ fontSize: '10px' }}>
-                          FREE Delivery Tomorrow
-                        </small>
+                      <div className="d-flex flex-column gap-1">
+                        {getDiscountPercentage(product) > 0 && <small className="text-danger fw-bold text-uppercase" style={{ fontSize: '10px' }}>{getDiscountPercentage(product)}% OFF</small>}
+                        <div className="d-flex align-items-center gap-1">
+                          <i className="bi bi-truck text-primary" style={{ fontSize: '12px' }}></i>
+                          <small className="text-primary fw-bold" style={{ fontSize: '10px' }}>Free delivery over {"\u20B9"}499</small>
+                        </div>
                       </div>
                     </div>
-                  </Link>
                 </div>
               </div>
             ))
@@ -172,7 +300,6 @@ const Home = ({ selectedCategory, onClearCategory }) => {
             </div>
           )}
         </div>
-        {!selectedCategory && recentlyViewed.length > 0 && <section className="mt-5 bg-white p-4"><h2 className="h5 fw-bold text-uppercase mb-3">Recently viewed</h2><div className="d-flex gap-3 overflow-auto">{recentlyViewed.map(p => <Link key={p.id} to={`/product/${p.id}`} className="text-dark text-decoration-none border p-2 flex-shrink-0" style={{ width: 170 }}><div className="small text-truncate">{p.name}</div><strong>₹{p.price}</strong></Link>)}</div></section>}
       </div>
 
       <footer className="home-footer mt-5">

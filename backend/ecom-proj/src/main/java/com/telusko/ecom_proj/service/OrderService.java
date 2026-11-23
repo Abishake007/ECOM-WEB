@@ -67,8 +67,12 @@ public class OrderService {
             orderItem.setOrder(order);
             orderItem.setProduct(product);
             orderItem.setQuantity(itemRequest.getQuantity());
-            orderItem.setPrice(product.getPrice());
-            subtotal = subtotal.add(product.getPrice().multiply(BigDecimal.valueOf(itemRequest.getQuantity())));
+            int productDiscount = product.getDiscountPercentage() == null ? 0 : product.getDiscountPercentage();
+            BigDecimal salePrice = product.getPrice()
+                    .multiply(BigDecimal.valueOf(100L - productDiscount))
+                    .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+            orderItem.setPrice(salePrice);
+            subtotal = subtotal.add(salePrice.multiply(BigDecimal.valueOf(itemRequest.getQuantity())));
             orderItems.add(orderItem);
         }
 
@@ -79,7 +83,8 @@ public class OrderService {
             default -> throw new IllegalArgumentException("Invalid coupon code.");
         };
         BigDecimal discount = subtotal.multiply(discountRate).setScale(2, RoundingMode.HALF_UP);
-        order.setTotalAmount(subtotal.add(new BigDecimal("10.00")).subtract(discount).max(BigDecimal.ZERO));
+        BigDecimal shipping = subtotal.compareTo(new BigDecimal("499.00")) >= 0 ? BigDecimal.ZERO : new BigDecimal("10.00");
+        order.setTotalAmount(subtotal.add(shipping).subtract(discount).max(BigDecimal.ZERO));
 
         order.setOrderItems(orderItems);
         Order savedOrder = orderRepo.save(order);

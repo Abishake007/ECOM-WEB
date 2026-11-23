@@ -40,7 +40,7 @@ public class AdminController {
 
     @PutMapping("/orders/{id}/status")
     public ResponseEntity<?> updateOrderStatus(@PathVariable Long id, @RequestBody StatusRequest request) {
-        List<String> allowed = List.of("PROCESSING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED");
+        List<String> allowed = List.of("PENDING", "PROCESSING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED");
         String status = request.status == null ? "" : request.status.toUpperCase();
         if (!allowed.contains(status)) return ResponseEntity.badRequest().body("Invalid order status");
         var order = orderRepo.findById(id).orElse(null);

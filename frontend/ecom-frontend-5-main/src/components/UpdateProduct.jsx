@@ -5,7 +5,7 @@ import { Container, Row, Col, Form, Button, Spinner } from "react-bootstrap";
 import AppContext from "../Context/Context";
 
 const UpdateProduct = () => {
-  const { notify } = useContext(AppContext);
+  const { notify, refreshData } = useContext(AppContext);
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -20,6 +20,7 @@ const UpdateProduct = () => {
     description: "",
     brand: "",
     price: "",
+    discountPercentage: 0,
     category: "",
     releaseDate: "",
     productAvailable: false,
@@ -67,6 +68,7 @@ const UpdateProduct = () => {
       headers: { "Content-Type": "multipart/form-data" },
     })
     .then(() => {
+      refreshData();
       notify("Product updated successfully");
       navigate("/admin/products");
     })
@@ -91,14 +93,14 @@ const UpdateProduct = () => {
   };
 
   if (loading) return (
-    <div className="text-center bg-white" style={{ height: "100vh", paddingTop: "200px" }}>
+    <div className="text-center bg-white" style={{ height: "100vh", paddingTop: "60px" }}>
       <Spinner animation="border" variant="dark" />
       <p className="mt-3 Oswald-font fw-black text-uppercase">Fetching Inventory Data...</p>
     </div>
   );
 
   return (
-    <div className="update-product-wrapper bg-white" style={{ minHeight: "100vh", paddingTop: "140px", paddingBottom: "80px" }}>
+    <div className="update-product-wrapper bg-white" style={{ minHeight: "100vh", paddingTop: "24px", paddingBottom: "80px" }}>
       <Container>
         <div className="border-bottom border-dark pb-3 mb-5">
           <h1 className="fw-black text-uppercase mb-0 Oswald-font" style={{ fontSize: "2.5rem", letterSpacing: "1.5px" }}>
@@ -128,7 +130,8 @@ const UpdateProduct = () => {
                   <div className="p-3 border-top border-dark">
                     <span className="text-muted text-uppercase fw-bold d-block mb-1" style={{ fontSize: "10px", letterSpacing: "1px" }}>{updateProduct.brand || "BRAND"}</span>
                     <h5 className="Oswald-font fw-black text-uppercase mb-2">{updateProduct.name || "PRODUCT NAME"}</h5>
-                    <h4 className="Oswald-font fw-black mb-0">₹{updateProduct.price || "0.00"}</h4>
+                    <h4 className="Oswald-font fw-black mb-0">₹{(Number(updateProduct.price || 0) * (100 - Number(updateProduct.discountPercentage || 0)) / 100).toFixed(2)}</h4>
+                    {Number(updateProduct.discountPercentage) > 0 && <small className="text-muted text-decoration-line-through">₹{updateProduct.price} · {updateProduct.discountPercentage}% off</small>}
                   </div>
                 </div>
               </div>
@@ -197,6 +200,13 @@ const UpdateProduct = () => {
                         type="number" name="price" value={updateProduct.price} 
                         onChange={handleChange} className="rounded-0 border-dark shadow-none py-2" required
                       />
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="Oswald-font fw-bold text-uppercase small">Offer Percentage (0–100%)</Form.Label>
+                      <Form.Control type="number" name="discountPercentage" min="0" max="100" step="1" value={updateProduct.discountPercentage ?? 0} onChange={handleChange} className="rounded-0 border-dark shadow-none py-2" required />
                     </Form.Group>
                   </Col>
 

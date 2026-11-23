@@ -5,10 +5,11 @@ import AppContext from "../Context/Context";
 import { Container, Row, Col, Button, Badge, Spinner, Card } from "react-bootstrap";
 import unplugged from "../assets/unplugged.png";
 import AuthService from "../services/auth.service";
+import { getDiscountPercentage, getSalePrice } from "../utils/pricing";
 
 const Product = () => {
   const { id } = useParams();
-  const { addToCart, data } = useContext(AppContext);
+  const { addToCart, data, cart } = useContext(AppContext);
   const [product, setProduct] = useState(null);
   const [mainImageUrl, setMainImageUrl] = useState("");
   const [gallery, setGallery] = useState([]); 
@@ -86,8 +87,24 @@ const Product = () => {
 
   if (!product) return <h2 className="text-center mt-5 Oswald-font uppercase">Product not found.</h2>;
 
+  let viewedProductIds = [];
+  try { viewedProductIds = JSON.parse(localStorage.getItem("klyro-recently-viewed") || "[]"); } catch { viewedProductIds = []; }
+  const behaviorProducts = [
+    ...viewedProductIds.map(viewedId => data.find(item => String(item.id) === String(viewedId))),
+    ...cart,
+    product
+  ].filter(Boolean);
+  const preferredCategories = new Set(behaviorProducts.map(item => item.category?.trim().toLowerCase()).filter(Boolean));
+  const preferredBrands = new Set(behaviorProducts.map(item => item.brand?.trim().toLowerCase()).filter(Boolean));
+  const visitedOrCartIds = new Set([...viewedProductIds, ...cart.map(item => item.id)].map(String));
+  const recommendations = data.filter(item => String(item.id) !== String(id) && !visitedOrCartIds.has(String(item.id)))
+    .map(item => ({ ...item, score: (preferredCategories.has(item.category?.trim().toLowerCase()) ? 3 : 0) + (preferredBrands.has(item.brand?.trim().toLowerCase()) ? 2 : 0) }))
+    .filter(item => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4);
+
   return (
-    <div className="product-page-wrapper bg-white" style={{ minHeight: "100vh", paddingTop: "140px", paddingBottom: "80px" }}>
+    <div className="product-page-wrapper bg-white" style={{ minHeight: "100vh", paddingTop: "24px", paddingBottom: "80px" }}>
       <Container>
         {/* Adidas Breadcrumb: Clean & Uppercase */}
         <nav aria-label="breadcrumb" className="mb-4 d-none d-md-block">
@@ -161,7 +178,7 @@ const Product = () => {
               
               <div className="price-section mb-4">
                 <div className="d-flex align-items-center gap-3">
-                  <span className="h3 fw-black text-dark mb-0">₹{product.price}</span>
+                  <div className="d-flex align-items-baseline gap-2"><span className="h3 fw-black text-dark mb-0">₹{getSalePrice(product)}</span>{getDiscountPercentage(product) > 0 && <><span className="text-muted text-decoration-line-through">₹{product.price}</span><Badge bg="danger">{getDiscountPercentage(product)}% OFF</Badge></>}</div>
                   {product.productAvailable && Number(product.stockQuantity) > 0 ? (
                     <span className="text-uppercase small fw-bold text-success border border-success px-2 py-1">In Stock</span>
                   ) : (
@@ -257,7 +274,7 @@ const Product = () => {
           </Col>
         </Row>
       </Container>
-      {data.filter(item => String(item.id) !== String(id) && item.category?.toLowerCase() === product.category?.toLowerCase()).length > 0 && <Container className="mt-5"><h2 className="h4 fw-black text-uppercase mb-3">You may also like</h2><div className="row g-3">{data.filter(item => String(item.id) !== String(id) && item.category?.toLowerCase() === product.category?.toLowerCase()).slice(0, 4).map(item => <div className="col-6 col-md-3" key={item.id}><Link className="d-block border p-3 h-100 text-decoration-none text-dark" to={`/product/${item.id}`}><strong>{item.name}</strong><div>₹{item.price}</div></Link></div>)}</div></Container>}
+      {recommendations.length > 0 && <Container className="mt-5"><h2 className="h4 fw-black text-uppercase mb-3">Picked from what you’ve viewed and added</h2><div className="row g-3">{recommendations.map(item => <div className="col-6 col-md-3" key={item.id}><Link className="d-block border p-3 h-100 text-decoration-none text-dark" to={`/product/${item.id}`}><img src={item.imageData ? `data:${item.imageType};base64,${item.imageData}` : unplugged} alt={item.name} className="w-100 bg-light mb-2" style={{ height: 150, objectFit: "contain" }} /><strong>{item.name}</strong><div>₹{getSalePrice(item)} {getDiscountPercentage(item) > 0 && <small className="text-danger">{getDiscountPercentage(item)}% OFF</small>}</div></Link></div>)}</div></Container>}
 
       <style>{`
         .fw-black { font-weight: 900 !important; }
@@ -268,7 +285,7 @@ const Product = () => {
         .uppercase { text-transform: uppercase; }
         .Oswald-font { font-family: 'Oswald', sans-serif; }
         @media (max-width: 768px) {
-          .product-page-wrapper { padding-top: 100px !important; }
+          .product-page-wrapper { padding-top: 16px !important; }
         }
       `}</style>
     </div>

@@ -90,6 +90,7 @@ public ResponseEntity<byte[]> getGalleryImage(@PathVariable Long imageId) {
             // service.addProduct must be updated to accept List<MultipartFile>
             return new ResponseEntity<>(service.addProduct(product, imageFiles), HttpStatus.CREATED);
         } catch (Exception e) {
+            if (e instanceof IllegalArgumentException) return ResponseEntity.badRequest().body(e.getMessage());
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -113,6 +114,8 @@ public ResponseEntity<byte[]> getGalleryImage(@PathVariable Long imageId) {
                 updatedProduct = service.updateProduct(id, product);
             }
             return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (IOException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }

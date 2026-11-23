@@ -63,6 +63,13 @@ public class AuthController {
     String jwt = jwtUtils.generateJwtToken(authentication);
     
     UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();    
+    userRepository.findById(userDetails.getId()).ifPresent(user -> {
+      if (user.getWelcomeEmailSent() == 0
+          && emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), frontendUrl + "/login")) {
+        user.setWelcomeEmailSent(1);
+        userRepository.save(user);
+      }
+    });
     List<String> roles = userDetails.getAuthorities().stream()
         .map(item -> item.getAuthority())
         .collect(Collectors.toList());

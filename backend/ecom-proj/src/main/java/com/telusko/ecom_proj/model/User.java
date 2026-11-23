@@ -36,6 +36,9 @@ public class User {
   @Size(max = 120)
   private String password;
 
+  @Column(name = "welcome_email_sent", nullable = false)
+  private int welcomeEmailSent = 0;
+
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(  name = "user_roles",
       joinColumns = @JoinColumn(name = "user_id"),

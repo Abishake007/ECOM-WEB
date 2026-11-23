@@ -89,7 +89,7 @@ const AdminOrders = () => {
                   <td>{getStatusBadge(order.status)}</td>
                   <td className="text-center pe-4">
                     <select aria-label={`Update order ${order.id} delivery status`} className="form-select form-select-sm" value={order.status?.toUpperCase() || "PROCESSING"} onChange={event => updateStatus(order.id, event.target.value)}>
-                      {["PROCESSING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"].map(status => <option key={status} value={status}>{status.replaceAll("_", " ")}</option>)}
+                      {["PENDING", "PROCESSING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"].map(status => <option key={status} value={status}>{status.replaceAll("_", " ")}</option>)}
                     </select>
                   </td>
                 </tr>

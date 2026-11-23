@@ -28,7 +28,7 @@ const UserOrders = () => {
   }
 
   return (
-    <div className="order-history-wrapper" style={{ backgroundColor: "#fbfbff", minHeight: "100vh", paddingTop: "110px" }}>
+    <div className="order-history-wrapper" style={{ backgroundColor: "#fbfbff", minHeight: "100vh", paddingTop: "24px" }}>
       <Container>
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="fw-bold mb-0">Your Order History</h2>

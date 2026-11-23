@@ -33,6 +33,7 @@ public class ProductService {
     }
 
    public Product addProduct(Product product, List<MultipartFile> imageFiles) throws IOException {
+        validateDiscountPercentage(product);
         if (imageFiles != null && !imageFiles.isEmpty()) {
             // Set the first image as the Primary Image
             MultipartFile firstImage = imageFiles.get(0);
@@ -57,6 +58,7 @@ public class ProductService {
 
     // Version 1: Handling marketplace update WITH a new high-res image
     public Product updateProduct(int id, Product product, List<MultipartFile> imageFiles) throws IOException {
+        validateDiscountPercentage(product);
         if (imageFiles != null && !imageFiles.isEmpty()) {
             MultipartFile firstImage = imageFiles.get(0);
             product.setImageName(firstImage.getOriginalFilename());
@@ -68,7 +70,15 @@ public class ProductService {
 
     // This remains for updates that don't touch images
     public Product updateProduct(int id, Product product) {
+        validateDiscountPercentage(product);
         return repo.save(product);
+    }
+
+    private void validateDiscountPercentage(Product product) {
+        if (product.getDiscountPercentage() == null) product.setDiscountPercentage(0);
+        if (product.getDiscountPercentage() < 0 || product.getDiscountPercentage() > 100) {
+            throw new IllegalArgumentException("Offer percentage must be between 0 and 100.");
+        }
     }
 
     /**

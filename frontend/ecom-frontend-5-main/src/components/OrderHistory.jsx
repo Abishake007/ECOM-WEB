@@ -29,7 +29,7 @@ const OrderHistory = () => {
   }
 
   return (
-    <div className="order-history-wrapper" style={{ backgroundColor: "#eaeded", minHeight: "100vh", paddingTop: "120px", paddingBottom: "50px" }}>
+    <div className="order-history-wrapper" style={{ backgroundColor: "#eaeded", minHeight: "100vh", paddingTop: "24px", paddingBottom: "50px" }}>
       <Container>
         <h2 className="fw-bold mb-4">Your Orders</h2>
 
@@ -90,7 +90,7 @@ const OrderHistory = () => {
                     
                     <Col md={4} className="text-md-end mt-3 mt-md-0 d-flex flex-column gap-2">
                       <div className="small text-start p-3 bg-light" aria-label="Delivery tracking progress">
-                        <strong>Tracking</strong><div className="d-flex flex-wrap gap-2 mt-2">{["PROCESSING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"].map((step, index) => <span key={step} className={`badge ${["PROCESSING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"].indexOf(order.status?.toUpperCase()) >= index ? 'bg-success' : 'bg-secondary'}`}>{step.replaceAll("_", " ")}</span>)}</div>
+                        <strong>Tracking</strong><div className="d-flex flex-wrap gap-2 mt-2">{["PENDING", "PROCESSING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"].map((step, index, steps) => <span key={step} className={`badge ${steps.indexOf(order.status?.toUpperCase()) >= index ? 'bg-success' : 'bg-secondary'}`}>{step.replaceAll("_", " ")}</span>)}</div>
                       </div>
                       <Button variant="outline-dark" className="w-100 fw-bold rounded-pill shadow-sm">
                         Write a product review

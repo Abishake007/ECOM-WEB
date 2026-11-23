@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState, useContext } from "react";
 import API from "../axios";
 import { Link, useNavigate } from "react-router-dom";
 import AuthService from "../services/auth.service";
@@ -13,6 +13,22 @@ const Navbar = ({ onSelectCategory }) => {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [currentUser, setCurrentUser] = useState(undefined);
   const [isAdmin, setIsAdmin] = useState(false);
+  const headerRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const header = headerRef.current;
+    if (!header) return undefined;
+    const updateHeaderSpace = () => document.documentElement.style.setProperty("--klyro-header-height", `${header.offsetHeight}px`);
+    updateHeaderSpace();
+    const observer = new ResizeObserver(updateHeaderSpace);
+    observer.observe(header);
+    window.addEventListener("resize", updateHeaderSpace);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateHeaderSpace);
+      document.documentElement.style.removeProperty("--klyro-header-height");
+    };
+  }, []);
 
   useEffect(() => {
     const user = AuthService.getCurrentUser();
@@ -67,10 +83,10 @@ const Navbar = ({ onSelectCategory }) => {
   const showAdminBoard = Boolean(currentUser && isAdmin && currentUser.roles?.includes("ROLE_ADMIN"));
 
   return (
-    <header className="fixed-top adidas-nav bg-white shadow-sm">
+    <header ref={headerRef} className="fixed-top adidas-nav bg-white shadow-sm">
       {/* Top Utility Bar */}
-      <div className="nav-utility d-flex justify-content-end px-4 py-1 border-bottom bg-white">
-        <div className="d-flex gap-4 small fw-bold text-uppercase" style={{ fontSize: '10px', letterSpacing: '1.5px' }}>
+        <div className="nav-utility d-flex justify-content-end px-4 py-1 border-bottom bg-white">
+        <div className="nav-utility-links d-flex gap-4 small fw-bold text-uppercase" style={{ fontSize: '10px', letterSpacing: '1.5px' }}>
           {currentUser ? (
             <span className="cursor-pointer text-dark hover-underline" onClick={logOut}>Logout</span>
           ) : (
@@ -104,7 +120,7 @@ const Navbar = ({ onSelectCategory }) => {
 
         <div className="nav-actions d-flex align-items-center gap-4">
           {/* Desktop Search Box */}
-          <div className="position-relative d-none d-md-block">
+          <div className="position-relative d-none d-lg-block">
             <div className="search-input-container">
               <input
                 type="text"
@@ -139,7 +155,7 @@ const Navbar = ({ onSelectCategory }) => {
       </div>
 
       {/* Mobile Search Row - Positioned outside to prevent layout overlap */}
-      <div className="d-md-none px-4 pb-3 bg-white">
+      <div className="d-lg-none px-4 pb-3 bg-white">
         <div className="search-input-container position-relative w-100">
           <input
             type="text"

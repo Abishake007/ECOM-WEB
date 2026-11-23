@@ -101,6 +101,7 @@ const AdminProducts = () => {
                             <th className="ps-4 py-3 border-0">Product Details</th>
                             <th className="border-0">Category</th>
                             <th className="border-0">Price</th>
+                            <th className="border-0">Offer</th>
                             <th className="border-0">Availability</th>
                             <th className="text-center border-0 pe-4">Manage</th>
                         </tr>
@@ -108,7 +109,7 @@ const AdminProducts = () => {
                     <tbody>
                         {visibleProducts.length === 0 ? (
                             <tr>
-                                <td colSpan="5" className="text-center py-5 text-muted fw-bold text-uppercase Oswald-font">No products match these filters.</td>
+                                <td colSpan="6" className="text-center py-5 text-muted fw-bold text-uppercase Oswald-font">No products match these filters.</td>
                             </tr>
                         ) : visibleProducts.map((product) => (
                             <tr key={product.id} className="border-bottom border-light">
@@ -133,6 +134,7 @@ const AdminProducts = () => {
                                 <td>
                                     <span className="fw-black Oswald-font">₹{product.price}</span>
                                 </td>
+                                <td><Badge bg={Number(product.discountPercentage) > 0 ? "danger" : "secondary"}>{Number(product.discountPercentage || 0)}% OFF</Badge></td>
                                 <td>
                                     {getStockBadge(product.stockQuantity)}
                                 </td>

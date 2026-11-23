@@ -2,8 +2,10 @@ import React, { useContext, useEffect, useState } from "react";
 import AppContext from "../Context/Context";
 import CheckoutPopup from "./CheckoutPopup";
 import unplugged from "../assets/unplugged.png";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import AuthService from "../services/auth.service";
 import API from "../axios";
+import { getDiscountPercentage, getSalePrice } from "../utils/pricing";
 
 const Cart = () => {
   const { cart, removeFromCart, clearCart, notify, refreshData } = useContext(AppContext);
@@ -13,15 +15,33 @@ const Cart = () => {
   const [discount, setDiscount] = useState(0);
   const [couponMessage, setCouponMessage] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    const sum = cart.reduce((acc, item) => acc + item.price * (item.quantity || 1), 0);
+    const user = AuthService.getCurrentUser();
+    if (new URLSearchParams(location.search).get("checkout") === "1" && (user?.accessToken || user?.token || user?.jwt)) {
+      setShowPopup(true);
+      navigate("/cart", { replace: true });
+    }
+  }, [location.search, navigate]);
+
+  const beginCheckout = () => {
+    const user = AuthService.getCurrentUser();
+    if (!user?.accessToken && !user?.token && !user?.jwt) {
+      navigate("/login", { state: { from: "/cart?checkout=1" } });
+      return;
+    }
+    setShowPopup(true);
+  };
+
+  useEffect(() => {
+    const sum = cart.reduce((acc, item) => acc + getSalePrice(item) * (item.quantity || 1), 0);
     setTotal(sum);
     setDiscount(0);
     setCouponMessage("");
   }, [cart]);
 
-  const shipping = cart.length > 0 ? 10.00 : 0; 
+  const shipping = cart.length > 0 && total < 499 ? 10.00 : 0;
 
   const applyCoupon = () => {
     const code = coupon.trim().toUpperCase();
@@ -55,7 +75,7 @@ const Cart = () => {
   };
 
   return (
-    <div className="cart-wrapper bg-white" style={{ minHeight: "100vh", paddingTop: "140px", paddingBottom: "80px" }}>
+    <div className="cart-wrapper bg-white" style={{ minHeight: "100vh", paddingTop: "24px", paddingBottom: "80px" }}>
       <div className="container">
         <h1 className="fw-black text-uppercase mb-5 Oswald-font" style={{ letterSpacing: "1.5px", fontSize: "2.5rem" }}>
           Your Bag <span className="text-muted fw-normal">({cart.length})</span>
@@ -91,11 +111,11 @@ const Cart = () => {
                         <div className="d-flex justify-content-between align-items-start">
                           <div>
                             <h5 className="fw-black text-uppercase Oswald-font mb-1" style={{ letterSpacing: "0.5px" }}>{item.name}</h5>
-                            <p className="text-muted small fw-bold text-uppercase mb-0">Price: ₹{item.price}</p>
+                            <p className="text-muted small fw-bold text-uppercase mb-0">Price: ₹{getSalePrice(item)}{getDiscountPercentage(item) > 0 && <> <span className="text-decoration-line-through">₹{item.price}</span> ({getDiscountPercentage(item)}% off)</>}</p>
                             <p className="small fw-bold text-uppercase mt-1">Quantity: {item.quantity || 1}</p>
                           </div>
                           <div className="text-end">
-                            <h5 className="fw-black Oswald-font">₹{(item.price * (item.quantity || 1)).toFixed(2)}</h5>
+                            <h5 className="fw-black Oswald-font">₹{(getSalePrice(item) * (item.quantity || 1)).toFixed(2)}</h5>
                           </div>
                         </div>
                         <div className="mt-3">
@@ -149,7 +169,7 @@ const Cart = () => {
                 <button 
                   className="btn btn-dark btn-lg w-100 fw-black text-uppercase d-flex align-items-center justify-content-between px-4 py-3 shadow-none" 
                   style={{ borderRadius: "0px", letterSpacing: "2px" }}
-                  onClick={() => setShowPopup(true)}
+                  onClick={beginCheckout}
                 >
                   <span>Checkout</span>
                   <i className="bi bi-arrow-right fs-4"></i>

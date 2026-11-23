@@ -1,5 +1,6 @@
 import API from "../axios";
 import { useState, useEffect, createContext } from "react";
+import AuthService from "../services/auth.service";
 
 const AppContext = createContext({
   data: [],
@@ -26,6 +27,12 @@ export const AppProvider = ({ children }) => {
 
 
   const addToCart = (product) => {
+    const user = AuthService.getCurrentUser();
+    if (!user?.accessToken && !user?.token && !user?.jwt) {
+      sessionStorage.setItem("klyro-pending-cart-product", String(product.id));
+      window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
     const stock = Number(product.stockQuantity || 0);
     if (!product.productAvailable || stock < 1) {
       notify("This product is currently out of stock.", "error");
@@ -51,6 +58,15 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  useEffect(() => {
+    const pendingProductId = sessionStorage.getItem("klyro-pending-cart-product");
+    const user = AuthService.getCurrentUser();
+    if (!pendingProductId || !data.length || (!user?.accessToken && !user?.token && !user?.jwt)) return;
+    const product = data.find(item => String(item.id) === pendingProductId);
+    sessionStorage.removeItem("klyro-pending-cart-product");
+    if (product) addToCart(product);
+  }, [data]);
+
   const removeFromCart = (productId) => {
     const updatedCart = cart.filter((item) => item.id !== productId);
     setCart(updatedCart);
@@ -61,6 +77,10 @@ const refreshData = async () => {
   try {
     const response = await API.get("/products");
     setData(response.data);
+    setCart(current => current.map(cartItem => {
+      const latest = response.data.find(product => product.id === cartItem.id);
+      return latest ? { ...cartItem, ...latest, quantity: cartItem.quantity } : cartItem;
+    }));
     setIsError(false);
   } catch (error) {
     console.error("Fetch error:", error);

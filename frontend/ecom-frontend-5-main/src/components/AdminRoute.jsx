@@ -28,10 +28,10 @@ const AdminRoute = ({ children }) => {
       });
   }, []);
 
-  if (access === "checking") return <main className="container text-center" style={{ paddingTop: 180 }}>Checking administrator access…</main>;
+  if (access === "checking") return <main className="container text-center" style={{ paddingTop: 50 }}>Checking administrator access…</main>;
   if (access === "unauthenticated") return <Navigate to="/login" replace />;
   if (access === "forbidden") return <Navigate to="/" replace />;
-  if (access === "unavailable") return <main className="container alert alert-warning" style={{ marginTop: 180 }}>Could not verify administrator access. Please try again.</main>;
+  if (access === "unavailable") return <main className="container alert alert-warning" style={{ marginTop: 50 }}>Could not verify administrator access. Please try again.</main>;
   return children;
 };
 

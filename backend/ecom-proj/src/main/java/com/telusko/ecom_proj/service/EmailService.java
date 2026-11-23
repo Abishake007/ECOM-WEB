@@ -66,6 +66,13 @@ public class EmailService {
         send(email, "Reset your KLYRO password", html);
     }
 
+    public boolean sendWelcomeEmail(String email, String username, String loginUrl) {
+        String html = "<h1>Welcome to KLYRO, " + escapeHtml(username) + "!</h1>"
+                + "<p>Your account is ready. Sign in any time to explore products, save favorites, and track orders.</p>"
+                + "<p><a href=\"" + escapeHtml(loginUrl) + "\">Sign in to KLYRO</a></p>";
+        return send(email, "Welcome to KLYRO", html);
+    }
+
     private boolean send(String recipient, String subject, String htmlContent) {
         if (apiKey == null || apiKey.isBlank() || senderEmail == null || senderEmail.isBlank()) {
             System.err.println("Brevo email is not configured: set BREVO_API_KEY and BREVO_SENDER_EMAIL.");

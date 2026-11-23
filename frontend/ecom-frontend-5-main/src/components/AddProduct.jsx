@@ -4,12 +4,13 @@ import { Container, Row, Col, Form, Button } from "react-bootstrap";
 import AppContext from "../Context/Context";
 
 const AddProduct = () => {
-  const { notify } = useContext(AppContext);
+  const { notify, refreshData } = useContext(AppContext);
   const [product, setProduct] = useState({
     name: "",
     brand: "",
     description: "",
     price: "",
+    discountPercentage: 0,
     category: "",
     stockQuantity: "",
     releaseDate: "",
@@ -49,9 +50,10 @@ const AddProduct = () => {
       headers: { "Content-Type": "multipart/form-data" },
     })
       .then(() => {
+        refreshData();
         notify("Product listing created successfully");
         setProduct({
-          name: "", brand: "", description: "", price: "",
+          name: "", brand: "", description: "", price: "", discountPercentage: 0,
           category: "", stockQuantity: "", releaseDate: "", productAvailable: true
         });
         setImages([]);
@@ -64,7 +66,7 @@ const AddProduct = () => {
   };
 
   return (
-    <div className="add-product-container bg-white" style={{ minHeight: "100vh", paddingTop: "140px", paddingBottom: "80px" }}>
+    <div className="add-product-container bg-white" style={{ minHeight: "100vh", paddingTop: "24px", paddingBottom: "80px" }}>
       <Container>
         <div className="border-bottom border-dark pb-3 mb-5">
           <h1 className="fw-black text-uppercase mb-0 Oswald-font" style={{ fontSize: "2.5rem", letterSpacing: "1.5px" }}>
@@ -177,6 +179,11 @@ const AddProduct = () => {
                   <Form.Group className="mb-3">
                     <Form.Label className="Oswald-font fw-bold text-uppercase" style={{ fontSize: '10px' }}>Price (INR)</Form.Label>
                     <Form.Control type="number" name="price" className="rounded-0 border-dark shadow-none" value={product.price} onChange={handleInputChange} required />
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="Oswald-font fw-bold text-uppercase" style={{ fontSize: '10px' }}>Offer percentage (0–100%)</Form.Label>
+                    <Form.Control type="number" name="discountPercentage" min="0" max="100" step="1" className="rounded-0 border-dark shadow-none" value={product.discountPercentage} onChange={handleInputChange} required />
+                    <Form.Text>Set 0 for no offer.</Form.Text>
                   </Form.Group>
                   <Form.Group className="mb-3">
                     <Form.Label className="Oswald-font fw-bold text-uppercase" style={{ fontSize: '10px' }}>Quantity</Form.Label>

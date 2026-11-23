@@ -41,7 +41,7 @@ function App() {
 >
       <Navbar onSelectCategory={handleCategorySelect} />
       <Routes>
-        <Route path="/" element={<Home selectedCategory={selectedCategory} onClearCategory={() => setSelectedCategory("")} />} />
+        <Route path="/" element={<Home selectedCategory={selectedCategory} onSelectCategory={handleCategorySelect} onClearCategory={() => setSelectedCategory("")} />} />
         <Route path="/add_product" element={<AddProduct />} />
         <Route path="/product/:id" element={<Product />} />
         <Route path="/cart" element={<Cart />} />

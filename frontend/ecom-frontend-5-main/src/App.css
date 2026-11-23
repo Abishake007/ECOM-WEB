@@ -12,14 +12,10 @@ body {
   font-family: 'Inter', sans-serif;
   background-color: #ffffff;
   color: var(--adidas-black);
-  /* Account for utility, primary, category, and mobile search rows. */
-  padding-top: 150px !important;
 }
 
-@media (max-width: 767.98px) {
-  body {
-    padding-top: 190px !important;
-  }
+#root {
+  padding-top: var(--klyro-header-height, 90px);
 }
 
 /* Sharp Edges Logic (Catalog Feel) */
@@ -48,10 +44,15 @@ body {
 .category-nav {
   overflow-x: auto;
   white-space: nowrap;
+  overscroll-behavior-x: contain;
   scrollbar-width: thin;
   min-width: 0;
   justify-content: center;
 }
+
+.nav-utility { min-width: 0; }
+.nav-utility-links { align-items: center; white-space: nowrap; }
+.nav-main { min-width: 0; }
 
 .nav-main .navbar-brand,
 .nav-actions {
@@ -90,6 +91,44 @@ body {
   .nav-actions {
     gap: 12px !important;
   }
+}
+
+@media (max-width: 767.98px) {
+  .nav-utility {
+    justify-content: flex-start !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .nav-utility-links {
+    width: 100%;
+    gap: 16px !important;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav-utility-links::-webkit-scrollbar { display: none; }
+
+  .nav-main {
+    flex-wrap: wrap;
+    row-gap: 0 !important;
+    padding-top: 10px !important;
+    padding-bottom: 0 !important;
+  }
+
+  .nav-main .navbar-brand { order: 0; }
+  .nav-actions { order: 1; margin-left: auto; }
+
+  .category-nav {
+    order: 2;
+    flex: 0 0 100%;
+    width: 100%;
+    padding: 9px 0 7px;
+    border-top: 1px solid #e5e5e5;
+    justify-content: flex-start;
+  }
+
+  .nav-main .adidas-search-input { width: 100%; }
 }
 
 .adidas-link::after {
@@ -389,6 +428,110 @@ body {
   background: #111;
 }
 
+.home-footer > .container-fluid { max-width: 1600px; margin: 0 auto; }
+.home-footer .row { align-items: flex-start; }
+
+.shop-category-section {
+  overflow: hidden;
+  color: #fff;
+  background: #24242c;
+}
+
+.shop-category-carousel { padding: 0 2px; }
+.shop-category-viewport { overflow: hidden; scroll-behavior: smooth; }
+.shop-category-track { display: flex; align-items: center; gap: 16px; width: max-content; }
+
+.shop-category-card {
+  position: relative;
+  display: block;
+  flex: 0 0 clamp(280px, 29vw, 430px);
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+  background: #101116;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .3);
+}
+
+.shop-category-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  transition: transform .25s ease;
+}
+
+.shop-category-card span {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 42px 18px 16px;
+  color: #fff;
+  background: linear-gradient(transparent, rgba(0, 0, 0, .8));
+  font: 700 18px/1.25 'Oswald', sans-serif;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.shop-category-card:hover img { transform: scale(1.04); }
+.shop-category-card:focus-visible { outline: 3px solid #fff; outline-offset: -5px; }
+
+.shop-category-arrow {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 50%;
+  color: #111;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .25);
+  font-size: 20px;
+}
+
+.shop-category-arrow-prev { left: 8px; }
+.shop-category-arrow-next { right: 8px; }
+.shop-category-arrow:hover { background: #e9e9e9; }
+.shop-category-arrow:focus-visible,
+.shop-category-dots button:focus-visible { outline: 3px solid #ffc107; outline-offset: 2px; }
+
+.shop-category-dots { display: flex; justify-content: center; align-items: center; gap: 5px; margin-top: 12px; }
+.shop-category-dots button { display: grid; width: 28px; height: 28px; padding: 0; place-items: center; border: 0; background: transparent; }
+.shop-category-dots button::before { width: 13px; height: 3px; content: ""; background: #686870; transition: width .2s, background .2s; }
+.shop-category-dots button.is-active::before { width: 25px; background: #fff; }
+
+.product-card { min-width: 0; }
+.product-card-link { min-width: 0; }
+.product-card-price-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.product-card-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 6px; }
+.product-card-wishlist,
+.product-card-add { min-height: 42px; }
+.product-card-wishlist { width: 42px; padding: 0; }
+.product-card-add { min-width: 68px; }
+.product-card-wishlist:focus-visible,
+.product-card-add:focus-visible { outline: 3px solid #0d6efd; outline-offset: 2px; }
+
+@media (max-width: 575.98px) {
+  .shop-category-section { padding: 16px !important; }
+  .shop-category-track { gap: 12px; }
+  .shop-category-card { flex-basis: 78vw; border-radius: 14px; }
+  .shop-category-card span { font-size: 15px; padding: 34px 14px 12px; }
+  .shop-category-arrow { width: 44px; height: 44px; font-size: 17px; }
+  .shop-category-arrow-prev { left: 4px; }
+  .shop-category-arrow-next { right: 4px; }
+  .product-card { padding: 12px !important; }
+  .product-card-price-row { align-items: flex-start; }
+  .product-card-actions { flex: 1 0 100%; width: 100%; }
+  .product-card-add { flex: 1 1 auto; }
+}
+#category-results { scroll-margin-top: calc(var(--klyro-header-height, 90px) + 12px); }
+#product-results { scroll-margin-top: calc(var(--klyro-header-height, 90px) + 12px); }
+
 .home-footer-brand {
   display: inline-block;
   color: #fff;
@@ -423,10 +566,12 @@ body {
   color: #d2d2d2;
   font-size: 13px;
   text-decoration: none;
+  line-height: 1.5;
 }
 
 .home-newsletter-form {
   display: flex;
+  width: 100%;
   max-width: 500px;
   border-bottom: 1px solid #fff;
 }
@@ -475,6 +620,13 @@ body {
 
 .home-footer-bottom button:hover {
   color: #fff;
+}
+
+@media (max-width: 575.98px) {
+  .home-footer > .container-fluid { padding-left: 20px; padding-right: 20px; }
+  .home-footer-bottom { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .home-newsletter-form button { padding-left: 8px; font-size: 10px; }
+  .home-footer-heading { line-height: 1.45; }
 }
 
 @media (max-width: 575.98px) {

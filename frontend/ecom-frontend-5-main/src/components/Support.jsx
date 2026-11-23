@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Alert, Button, Card, Container, Form } from 'react-bootstrap';
 import { Link, useSearchParams } from 'react-router-dom';
 import API from '../axios';
@@ -24,7 +24,7 @@ const Support = () => {
     } finally { setSending(false); }
   };
 
-  return <main style={{ minHeight: '100vh', paddingTop: 140, paddingBottom: 60, background: '#f7f7f7' }}><Container style={{ maxWidth: 760 }}>
+  return <main style={{ minHeight: '100vh', paddingTop: 24, paddingBottom: 60, background: '#f7f7f7' }}><Container style={{ maxWidth: 760 }}>
     <h1 className="fw-bold text-uppercase mb-2">Customer support</h1><p className="text-muted mb-4">Ask about a product, order, delivery, or problem with your purchase.</p>
     {!signedIn ? <Alert variant="warning">Please <Link to="/login">sign in</Link> to send a support request.</Alert> : <Card className="border-0 shadow-sm"><Card.Body className="p-4 p-md-5">
       {notice && <Alert variant={notice.variant} role="status">{notice.text}</Alert>}
@@ -33,7 +33,7 @@ const Support = () => {
         {params.get('productId') && <p className="small text-muted">About product #{params.get('productId')}</p>}{params.get('orderId') && <p className="small text-muted">About order #ORD-{params.get('orderId')}</p>}
         <Form.Group className="mb-3"><Form.Label>Subject</Form.Label><Form.Control maxLength={160} required value={subject} onChange={e => setSubject(e.target.value)} placeholder="Briefly describe your question" /></Form.Group>
         <Form.Group className="mb-4"><Form.Label>Message</Form.Label><Form.Control as="textarea" rows={6} maxLength={5000} required value={message} onChange={e => setMessage(e.target.value)} placeholder="Include details that will help us assist you." /><Form.Text>{message.length}/5000</Form.Text></Form.Group>
-        <Button type="submit" variant="dark" disabled={sending}>{sending ? 'Sending…' : 'Send to support'}</Button>
+        <Button type="submit" variant="dark" disabled={sending}>{sending ? 'Sending�' : 'Send to support'}</Button>
       </Form>
     </Card.Body></Card>}
   </Container></main>;

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import AuthService from "../services/auth.service";
 
 const SignIn = () => {
@@ -9,6 +9,7 @@ const SignIn = () => {
   const [message, setMessage] = useState("");
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -18,8 +19,10 @@ const SignIn = () => {
     AuthService.login(username, password)
       .then((data) => {
         setLoading(false);
-        navigate("/");
-        window.location.reload(); 
+        const queryNext = new URLSearchParams(location.search).get("next");
+        const requestedNext = queryNext || location.state?.from || "/";
+        const destination = requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/";
+        window.location.assign(destination);
       })
       .catch((error) => {
         setLoading(false);
@@ -104,7 +107,7 @@ const SignIn = () => {
               <div className="text-start mt-4 border-top border-dark pt-4">
                 <p className="text-muted small fw-bold text-uppercase mb-0" style={{ letterSpacing: "1px" }}>
                   New to the club? <br/>
-                  <Link to="/signup" className="text-dark fw-black text-decoration-underline mt-2 d-inline-block">
+                  <Link to={`/signup${location.search}`} state={location.state} className="text-dark fw-black text-decoration-underline mt-2 d-inline-block">
                     Register Now
                   </Link>
                 </p>

@@ -245,3 +245,9 @@ Before deploying the backend changes, run `backend/ecom-proj/database/2026-11-ad
 In Render, add `ADMIN_NOTIFICATION_EMAIL` with the mailbox where you want new order and customer support notifications delivered. Keep `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and `BREVO_SENDER_NAME` configured; the Brevo key needs permission to send transactional email. After the database migration and Render environment variables are set, deploy the backend and frontend.
 
 Before deploying the review ownership change, also run `backend/ecom-proj/database/2026-11-add-review-author.sql` once in TiDB. It adds the author reference used to allow deletion only by that reviewer or an admin, and backfills existing reviews when the username matches.
+
+Before deploying the first-login welcome email change, run `backend/ecom-proj/database/2026-11-add-welcome-email-flag.sql` once in TiDB. The welcome email is sent after a user's first successful login; failed email delivery does not block login and is retried at a later login.
+
+For local frontend development, Vite uses `http://localhost:8080/api` by default. Start the backend on port 8080 in a separate terminal with its `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, and `JWT_SECRET` environment variables set. If you want the local frontend to call the deployed Render backend instead, create `frontend/ecom-frontend-5-main/.env.local` with `VITE_API_BASE_URL=https://ecom-web-knao.onrender.com/api`, then restart Vite.
+
+Before deploying per-product offers, run `backend/ecom-proj/database/2026-11-add-product-discount.sql` once in TiDB. Admins can then set an offer from 0% to 100% while adding or editing a product; sale prices are calculated from the product's base price in the storefront, cart, and backend order total.

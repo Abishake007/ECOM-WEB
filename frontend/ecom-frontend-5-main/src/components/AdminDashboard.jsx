@@ -9,7 +9,7 @@ const AdminDashboard = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="admin-wrapper bg-white" style={{ minHeight: "100vh", paddingTop: "140px", paddingBottom: "60px" }}>
+    <div className="admin-wrapper bg-white" style={{ minHeight: "100vh", paddingTop: "24px", paddingBottom: "60px" }}>
       <Container>
         <div className="border-bottom border-dark pb-3 mb-5">
           <h1 className="fw-black text-uppercase mb-0 Oswald-font" style={{ fontSize: "2.5rem", letterSpacing: "1.5px" }}>
