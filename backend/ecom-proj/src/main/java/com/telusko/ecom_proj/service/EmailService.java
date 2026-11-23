@@ -1,6 +1,5 @@
 package com.telusko.ecom_proj.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.telusko.ecom_proj.model.Order;
 import com.telusko.ecom_proj.model.OrderItem;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,15 +10,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 public class EmailService {
     private static final URI BREVO_EMAIL_ENDPOINT = URI.create("https://api.brevo.com/v3/smtp/email");
     private final HttpClient httpClient = HttpClient.newHttpClient();
-    private final ObjectMapper objectMapper;
 
     @Value("${BREVO_API_KEY:}")
     private String apiKey;
@@ -29,10 +24,6 @@ public class EmailService {
 
     @Value("${BREVO_SENDER_NAME:KLYRO}")
     private String senderName;
-
-    public EmailService(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
 
     public void sendOrderConfirmationEmail(Order order) {
         if (order.getUser() == null || order.getUser().getEmail() == null) return;
@@ -68,17 +59,17 @@ public class EmailService {
         }
 
         try {
-            Map<String, Object> payload = new LinkedHashMap<>();
-            payload.put("sender", Map.of("name", senderName, "email", senderEmail));
-            payload.put("to", List.of(Map.of("email", recipient)));
-            payload.put("subject", subject);
-            payload.put("htmlContent", htmlContent);
+            String payload = "{\"sender\":{\"name\":\"" + escapeJson(senderName)
+                    + "\",\"email\":\"" + escapeJson(senderEmail)
+                    + "\"},\"to\":[{\"email\":\"" + escapeJson(recipient)
+                    + "\"}],\"subject\":\"" + escapeJson(subject)
+                    + "\",\"htmlContent\":\"" + escapeJson(htmlContent) + "\"}";
 
             HttpRequest request = HttpRequest.newBuilder(BREVO_EMAIL_ENDPOINT)
                     .header("accept", "application/json")
                     .header("api-key", apiKey)
                     .header("content-type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(payload), StandardCharsets.UTF_8))
+                    .POST(HttpRequest.BodyPublishers.ofString(payload, StandardCharsets.UTF_8))
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -97,5 +88,27 @@ public class EmailService {
         if (value == null) return "";
         return value.replace("&", "&amp;").replace("<", "&lt;")
                 .replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
+    }
+
+    private String escapeJson(String value) {
+        if (value == null) return "";
+        StringBuilder escaped = new StringBuilder(value.length() + 16);
+        for (int i = 0; i < value.length(); i++) {
+            char character = value.charAt(i);
+            switch (character) {
+                case '"' -> escaped.append("\\\"");
+                case '\\' -> escaped.append("\\\\");
+                case '\b' -> escaped.append("\\b");
+                case '\f' -> escaped.append("\\f");
+                case '\n' -> escaped.append("\\n");
+                case '\r' -> escaped.append("\\r");
+                case '\t' -> escaped.append("\\t");
+                default -> {
+                    if (character < 0x20) escaped.append(String.format("\\u%04x", (int) character));
+                    else escaped.append(character);
+                }
+            }
+        }
+        return escaped.toString();
     }
 }
