@@ -96,7 +96,7 @@ spring.datasource.password=your_password
 spring.jpa.hibernate.ddl-auto=update
 ```
 
-Configure `FRONTEND_URL` for the deployed frontend and `MAIL_USERNAME` / `MAIL_PASSWORD` to enable password reset emails.
+Configure `FRONTEND_URL` for the deployed frontend. Set `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and optionally `BREVO_SENDER_NAME` in Render to enable transactional emails through Brevo's HTTPS API.
 
 3. Run the backend:
 ```bash

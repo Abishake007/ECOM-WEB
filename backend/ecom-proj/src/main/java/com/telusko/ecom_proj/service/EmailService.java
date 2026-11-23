@@ -1,83 +1,101 @@
 package com.telusko.ecom_proj.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.telusko.ecom_proj.model.Order;
 import com.telusko.ecom_proj.model.OrderItem;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class EmailService {
+    private static final URI BREVO_EMAIL_ENDPOINT = URI.create("https://api.brevo.com/v3/smtp/email");
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final ObjectMapper objectMapper;
 
-    @Autowired(required = false)
-    private JavaMailSender mailSender;
+    @Value("${BREVO_API_KEY:}")
+    private String apiKey;
 
-    @Async
+    @Value("${BREVO_SENDER_EMAIL:}")
+    private String senderEmail;
+
+    @Value("${BREVO_SENDER_NAME:KLYRO}")
+    private String senderName;
+
+    public EmailService(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
     public void sendOrderConfirmationEmail(Order order) {
-        if (mailSender == null) {
-            System.out.println("MailSender not configured, skipping email.");
+        if (order.getUser() == null || order.getUser().getEmail() == null) return;
+        StringBuilder html = new StringBuilder();
+        html.append("<h1>Thank you for your KLYRO order!</h1>")
+                .append("<p>Hi ").append(escapeHtml(order.getUser().getUsername())).append(",</p>")
+                .append("<p>Your order #").append(order.getId()).append(" is being processed.</p>")
+                .append("<h3>Shipping information</h3><p>")
+                .append(escapeHtml(order.getShippingAddress())).append("</p>")
+                .append("<h3>Order summary</h3><ul>");
+        if (order.getOrderItems() != null) {
+            for (OrderItem item : order.getOrderItems()) {
+                html.append("<li>").append(escapeHtml(item.getProduct().getName()))
+                        .append(" × ").append(item.getQuantity()).append("</li>");
+            }
+        }
+        html.append("</ul><p>Total: ").append(order.getTotalAmount()).append("</p>");
+        send(order.getUser().getEmail(), "KLYRO order confirmation #" + order.getId(), html.toString());
+    }
+
+    public void sendPasswordResetEmail(String email, String resetUrl) {
+        String html = "<h1>Reset your KLYRO password</h1>"
+                + "<p>This link expires in 15 minutes.</p>"
+                + "<p><a href=\"" + escapeHtml(resetUrl) + "\">Reset password</a></p>"
+                + "<p>If you did not request this, you can ignore this email.</p>";
+        send(email, "Reset your KLYRO password", html);
+    }
+
+    private void send(String recipient, String subject, String htmlContent) {
+        if (apiKey == null || apiKey.isBlank() || senderEmail == null || senderEmail.isBlank()) {
+            System.err.println("Brevo email is not configured: set BREVO_API_KEY and BREVO_SENDER_EMAIL.");
             return;
         }
+
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("sender", Map.of("name", senderName, "email", senderEmail));
+            payload.put("to", List.of(Map.of("email", recipient)));
+            payload.put("subject", subject);
+            payload.put("htmlContent", htmlContent);
 
-            helper.setTo(order.getUser().getEmail());
-            helper.setSubject("Order Confirmation - #" + order.getId());
+            HttpRequest request = HttpRequest.newBuilder(BREVO_EMAIL_ENDPOINT)
+                    .header("accept", "application/json")
+                    .header("api-key", apiKey)
+                    .header("content-type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(payload), StandardCharsets.UTF_8))
+                    .build();
 
-            StringBuilder content = new StringBuilder();
-            content.append("<h1>Thank you for your order!</h1>");
-            content.append("<p>Hi ").append(order.getUser().getUsername()).append(",</p>");
-            content.append("<p>We've received your order and are processing it.</p>");
-
-            // --- New Shipping Details Section ---
-            content.append("<h3>Shipping Information:</h3>");
-            content.append("<p><strong>Address:</strong> ").append(order.getShippingAddress()).append("</p>");
-            content.append("<p><strong>Phone:</strong> ").append(order.getPhoneNumber()).append("</p>");
-            content.append("<hr>");
-
-            content.append("<h3>Order Summary:</h3>");
-            content.append("<table border='1' style='border-collapse: collapse; width: 100%;'>");
-            content.append("<tr style='background-color: #f2f2f2;'><th>Item</th><th>Quantity</th><th>Price</th></tr>");
-
-            for (OrderItem item : order.getOrderItems()) {
-                content.append("<tr>")
-                        .append("<td style='padding: 8px;'>").append(item.getProduct().getName()).append("</td>")
-                        .append("<td style='padding: 8px;'>").append(item.getQuantity()).append("</td>")
-                        .append("<td style='padding: 8px;'>$").append(item.getPrice()).append("</td>")
-                        .append("</tr>");
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                System.err.println("Brevo email request failed with HTTP " + response.statusCode() + ": " + response.body());
             }
-
-            content.append("</table>");
-            content.append("<h3>Total Amount: $").append(order.getTotalAmount()).append("</h3>");
-            content.append("<p>Status: ").append(order.getStatus()).append("</p>");
-
-            helper.setText(content.toString(), true);
-            mailSender.send(message);
-        } catch (MessagingException e) {
-            e.printStackTrace();
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            System.err.println("Brevo email request was interrupted.");
+        } catch (Exception exception) {
+            System.err.println("Brevo email request failed: " + exception.getMessage());
         }
     }
 
-    @Async
-    public void sendPasswordResetEmail(String email, String resetUrl) {
-        if (mailSender == null) {
-            System.out.println("MailSender not configured, skipping password reset email.");
-            return;
-        }
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, false);
-            helper.setTo(email);
-            helper.setSubject("Reset your KLYRO password");
-            helper.setText("Use this link within 15 minutes to reset your password: " + resetUrl);
-            mailSender.send(message);
-        } catch (MessagingException | RuntimeException e) {
-            System.err.println("Could not send password reset email: " + e.getMessage());
-        }
+    private String escapeHtml(String value) {
+        if (value == null) return "";
+        return value.replace("&", "&amp;").replace("<", "&lt;")
+                .replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
     }
 }
