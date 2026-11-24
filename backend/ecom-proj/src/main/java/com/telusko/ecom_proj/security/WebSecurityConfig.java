@@ -58,7 +58,12 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("https://ecom-web-vert.vercel.app","http://localhost:5173"));
+        // Vercel can serve production and preview deployments from different
+        // subdomains. Match the production domain and Vercel HTTPS deployments.
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "https://ecom-web-vert.vercel.app",
+                "https://*.vercel.app",
+                "http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
