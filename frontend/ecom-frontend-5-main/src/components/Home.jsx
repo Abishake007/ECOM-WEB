@@ -7,13 +7,12 @@ import AuthService from "../services/auth.service";
 import { getDiscountPercentage, getSalePrice } from "../utils/pricing";
 import { getImageUrl } from "../utils/imageUrl";
 
-const Home = ({ selectedCategory, onSelectCategory, onClearCategory }) => {
+const Home = ({ selectedCategory, onSelectCategory, onClearCategory, searchText, onSearchChange }) => {
   const { data, cart, addToCart, refreshData, notify } = useContext(AppContext);
   const [products, setProducts] = useState([]);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [sortBy, setSortBy] = useState("featured");
   const [availableOnly, setAvailableOnly] = useState(false);
-  const [searchText, setSearchText] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -51,7 +50,7 @@ const Home = ({ selectedCategory, onSelectCategory, onClearCategory }) => {
 
   const viewAllProducts = () => {
     onClearCategory();
-    setSearchText("");
+    onSearchChange("");
     setBrandFilter("");
     setMinPrice("");
     setMaxPrice("");
@@ -183,7 +182,6 @@ const Home = ({ selectedCategory, onSelectCategory, onClearCategory }) => {
           <button type="button" className="btn btn-outline-dark btn-sm" onClick={viewAllProducts}>View all products</button>
         </div>}
         <div className="d-flex flex-wrap align-items-center gap-2 bg-white p-3 mb-3 border">
-          <input className="form-control" style={{ maxWidth: 260 }} value={searchText} onChange={e => setSearchText(e.target.value)} placeholder="Search products, brands..." aria-label="Filter products" />
           <select className="form-select" style={{ maxWidth: 210 }} value={sortBy} onChange={e => setSortBy(e.target.value)} aria-label="Sort products">
             <option value="featured">Featured</option><option value="newest">Newest</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option><option value="name">Name</option>
           </select>

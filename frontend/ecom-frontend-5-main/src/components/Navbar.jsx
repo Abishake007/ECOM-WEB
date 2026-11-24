@@ -4,11 +4,10 @@ import { Link, useNavigate } from "react-router-dom";
 import AuthService from "../services/auth.service";
 import AppContext from "../Context/Context";
 
-const Navbar = ({ onSelectCategory }) => {
+const Navbar = ({ onSelectCategory, searchQuery, onSearchChange }) => {
   const { cart, data } = useContext(AppContext);
   const navigate = useNavigate();
 
-  const [input, setInput] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [currentUser, setCurrentUser] = useState(undefined);
@@ -58,7 +57,7 @@ const Navbar = ({ onSelectCategory }) => {
   };
 
   const handleSearch = async (value) => {
-    setInput(value);
+    onSearchChange?.(value);
     if (value.length >= 1) {
       setShowSearchResults(true);
       try {
@@ -126,8 +125,14 @@ const Navbar = ({ onSelectCategory }) => {
                 type="text"
                 className="adidas-search-input"
                 placeholder="SEARCH"
-                value={input}
+                value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    setShowSearchResults(false);
+                    navigate("/");
+                  }
+                }}
               />
               <i className="bi bi-search search-icon"></i>
             </div>
@@ -161,8 +166,14 @@ const Navbar = ({ onSelectCategory }) => {
             type="text"
             className="adidas-search-input w-100"
             placeholder="SEARCH"
-            value={input}
+            value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                setShowSearchResults(false);
+                navigate("/");
+              }
+            }}
           />
           <i className="bi bi-search search-icon"></i>
 

@@ -27,6 +27,7 @@ import Support from "./components/Support";
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
@@ -39,9 +40,9 @@ function App() {
     v7_relativeSplatPath: true 
   }}
 >
-      <Navbar onSelectCategory={handleCategorySelect} />
+      <Navbar onSelectCategory={handleCategorySelect} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
       <Routes>
-        <Route path="/" element={<Home selectedCategory={selectedCategory} onSelectCategory={handleCategorySelect} onClearCategory={() => setSelectedCategory("")} />} />
+        <Route path="/" element={<Home selectedCategory={selectedCategory} onSelectCategory={handleCategorySelect} onClearCategory={() => setSelectedCategory("")} searchText={searchQuery} onSearchChange={setSearchQuery} />} />
         <Route path="/add_product" element={<AddProduct />} />
         <Route path="/product/:id" element={<Product />} />
         <Route path="/cart" element={<Cart />} />
