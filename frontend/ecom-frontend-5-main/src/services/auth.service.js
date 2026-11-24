@@ -36,7 +36,7 @@ const login = (username, password) => {
           console.error("TOKEN MISSING: Backend sent data, but no token field was found.", user);
         }
       }
-      return response.data;
+      throw new Error("Sign-in response did not include an authentication token. Please try again.");
     })
     .catch(err => {
       console.error("NETWORK ERROR: Could not reach the signin endpoint.", err);

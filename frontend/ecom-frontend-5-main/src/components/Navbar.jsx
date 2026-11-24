@@ -38,6 +38,14 @@ const Navbar = ({ onSelectCategory, searchQuery, onSearchChange }) => {
       return;
     }
     setCurrentUser(user);
+
+    // Regular customers cannot access this admin-only endpoint. Avoid making
+    // an expected 403 request for every customer session.
+    if (!user.roles?.includes("ROLE_ADMIN")) {
+      setIsAdmin(false);
+      return;
+    }
+
     API.get("/admin/access")
       .then(() => setIsAdmin(true))
       .catch(error => {
