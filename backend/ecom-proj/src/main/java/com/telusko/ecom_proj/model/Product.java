@@ -44,7 +44,7 @@ public class Product {
 
     @JsonProperty("imageUrl")
     public String getImageUrl() {
-        return id == null ? null : "/api/product/" + id + "/image";
+        return id == null ? null : "/product/" + id + "/image";
     }
 
     @ManyToOne(fetch = FetchType.LAZY)

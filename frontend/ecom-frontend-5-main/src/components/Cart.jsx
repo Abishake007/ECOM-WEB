@@ -6,6 +6,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import AuthService from "../services/auth.service";
 import API from "../axios";
 import { getDiscountPercentage, getSalePrice } from "../utils/pricing";
+import { getImageUrl } from "../utils/imageUrl";
 
 const Cart = () => {
   const { cart, removeFromCart, clearCart, notify, refreshData } = useContext(AppContext);
@@ -100,7 +101,7 @@ const Cart = () => {
                       <div className="col-4 col-md-3">
                         <div className="bg-light p-2 text-center">
                           <img 
-                            src={item.imageUrl || unplugged}
+                            src={getImageUrl(item.imageUrl) || unplugged}
                             alt={item.name} 
                             className="img-fluid"
                             style={{ maxHeight: "150px", objectFit: "contain" }} 

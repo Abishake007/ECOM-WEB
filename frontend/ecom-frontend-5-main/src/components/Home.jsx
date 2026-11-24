@@ -5,6 +5,7 @@ import unplugged from "../assets/unplugged.png";
 import API from "../axios";
 import AuthService from "../services/auth.service";
 import { getDiscountPercentage, getSalePrice } from "../utils/pricing";
+import { getImageUrl } from "../utils/imageUrl";
 
 const Home = ({ selectedCategory, onSelectCategory, onClearCategory }) => {
   const { data, cart, addToCart, refreshData, notify } = useContext(AppContext);
@@ -20,6 +21,7 @@ const Home = ({ selectedCategory, onSelectCategory, onClearCategory }) => {
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
   const categoryViewportRef = useRef(null);
   const categoryCardRefs = useRef([]);
+  const initializedCategoryCount = useRef(0);
 
   const addToWishlist = async (productId) => {
     const user = AuthService.getCurrentUser();
@@ -64,7 +66,7 @@ const Home = ({ selectedCategory, onSelectCategory, onClearCategory }) => {
     if (data && data.length > 0) {
       setProducts(data.map(p => ({
         ...p,
-        imageUrl: p.imageUrl || unplugged
+        imageUrl: getImageUrl(p.imageUrl) || unplugged
       })));
     }
   }, [data]);
@@ -98,9 +100,13 @@ const Home = ({ selectedCategory, onSelectCategory, onClearCategory }) => {
     });
   useEffect(() => {
     if (!categoryCards.length || selectedCategory) return undefined;
-    const initialIndex = categoryCards.length > 4 ? 2 : 1;
-    const nextIndex = categoryCards.length > 1 && activeCategoryIndex === 0
-      ? initialIndex : Math.min(activeCategoryIndex, categoryCards.length - 1);
+    if (initializedCategoryCount.current !== categoryCards.length) {
+      initializedCategoryCount.current = categoryCards.length;
+      const initialIndex = categoryCards.length > 4 ? 2 : Math.min(1, categoryCards.length - 1);
+      setActiveCategoryIndex(initialIndex);
+      return undefined;
+    }
+    const nextIndex = Math.min(activeCategoryIndex, categoryCards.length - 1);
     if (nextIndex !== activeCategoryIndex) {
       setActiveCategoryIndex(nextIndex);
       return undefined;

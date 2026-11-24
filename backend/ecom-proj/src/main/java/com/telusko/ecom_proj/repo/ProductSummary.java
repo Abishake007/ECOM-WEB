@@ -17,6 +17,6 @@ public interface ProductSummary {
     Integer getStockQuantity();
 
     default String getImageUrl() {
-        return getId() == null ? null : "/api/product/" + getId() + "/image";
+        return getId() == null ? null : "/product/" + getId() + "/image";
     }
 }

@@ -31,6 +31,10 @@ public class WishlistController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
+        if (wishlistRepository.existsByUserIdAndProductId(userDetails.getId(), productId)) {
+            return ResponseEntity.ok("Already in wishlist");
+        }
+
         // 2. Create the User and Product objects to link them (using IDs)
         com.telusko.ecom_proj.model.User user = new com.telusko.ecom_proj.model.User();
         user.setId(userDetails.getId());

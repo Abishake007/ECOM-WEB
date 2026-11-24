@@ -6,6 +6,7 @@ import { Container, Row, Col, Button, Badge, Spinner, Card } from "react-bootstr
 import unplugged from "../assets/unplugged.png";
 import AuthService from "../services/auth.service";
 import { getDiscountPercentage, getSalePrice } from "../utils/pricing";
+import { getImageUrl } from "../utils/imageUrl";
 
 const Product = () => {
   const { id } = useParams();
@@ -33,7 +34,7 @@ const Product = () => {
         const reviewResponse = await API.get(`/product/${id}/reviews`);
         setReviews(reviewResponse.data);
         
-        const primaryUrl = productData.imageUrl || unplugged;
+        const primaryUrl = getImageUrl(productData.imageUrl) || unplugged;
         setMainImageUrl(primaryUrl);
 
         if (productData.gallery && productData.gallery.length > 0) {
@@ -52,6 +53,14 @@ const Product = () => {
     };
     if (id) fetchProduct();
   }, [id]);
+
+  useEffect(() => {
+    if (!loading && window.location.hash === "#reviews") {
+      window.requestAnimationFrame(() => {
+        document.getElementById("product-reviews")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }, [loading]);
 
   const submitReview = async (event) => {
     event.preventDefault();
@@ -237,7 +246,7 @@ const Product = () => {
               </div>
 
               {/* REVIEWS: Monochrome List */}
-              <div className="mt-5 border-top border-dark pt-5">
+              <div id="product-reviews" className="mt-5 border-top border-dark pt-5">
                 <h5 className="fw-black text-uppercase mb-4">Reviews ({reviews.length})</h5>
                 {reviews.length > 0 ? (
                   reviews.map((review) => (
@@ -272,7 +281,7 @@ const Product = () => {
           </Col>
         </Row>
       </Container>
-      {recommendations.length > 0 && <Container className="mt-5"><h2 className="h4 fw-black text-uppercase mb-3">Picked from what you’ve viewed and added</h2><div className="row g-3">{recommendations.map(item => <div className="col-6 col-md-3" key={item.id}><Link className="d-block border p-3 h-100 text-decoration-none text-dark" to={`/product/${item.id}`}><img src={item.imageUrl || unplugged} alt={item.name} className="w-100 bg-light mb-2" style={{ height: 150, objectFit: "contain" }} /><strong>{item.name}</strong><div>₹{getSalePrice(item)} {getDiscountPercentage(item) > 0 && <small className="text-danger">{getDiscountPercentage(item)}% OFF</small>}</div></Link></div>)}</div></Container>}
+      {recommendations.length > 0 && <Container className="mt-5"><h2 className="h4 fw-black text-uppercase mb-3">Picked from what you’ve viewed and added</h2><div className="row g-3">{recommendations.map(item => <div className="col-6 col-md-3" key={item.id}><Link className="d-block border p-3 h-100 text-decoration-none text-dark" to={`/product/${item.id}`}><img src={getImageUrl(item.imageUrl) || unplugged} alt={item.name} className="w-100 bg-light mb-2" style={{ height: 150, objectFit: "contain" }} /><strong>{item.name}</strong><div>₹{getSalePrice(item)} {getDiscountPercentage(item) > 0 && <small className="text-danger">{getDiscountPercentage(item)}% OFF</small>}</div></Link></div>)}</div></Container>}
 
       <style>{`
         .fw-black { font-weight: 900 !important; }

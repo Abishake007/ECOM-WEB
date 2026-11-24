@@ -5,6 +5,7 @@ import { Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import unplugged from "../assets/unplugged.png";
 import { Link } from "react-router-dom";
 import { getDiscountPercentage, getSalePrice } from "../utils/pricing";
+import { getImageUrl } from "../utils/imageUrl";
 
 const Wishlist = () => {
   const { addToCart } = useContext(AppContext); 
@@ -14,7 +15,8 @@ const Wishlist = () => {
   const fetchWishlist = () => {
     API.get('/wishlist') 
       .then(res => {
-        setItems(Array.isArray(res.data) ? res.data : []);
+        const products = Array.isArray(res.data) ? res.data : [];
+        setItems([...new Map(products.map(product => [product.id, product])).values()]);
         setLoading(false);
       })
       .catch(err => {
@@ -96,7 +98,7 @@ const Wishlist = () => {
                     {/* Image Stage */}
                     <div className="image-stage d-flex align-items-center justify-content-center mb-3 bg-light" style={{ height: "200px" }}>
                       <img 
-                        src={product.imageUrl || unplugged}
+                        src={getImageUrl(product.imageUrl) || unplugged}
                         style={{ maxHeight: "80%", maxWidth: "80%", objectFit: "contain" }}
                         alt={product.name}
                       />

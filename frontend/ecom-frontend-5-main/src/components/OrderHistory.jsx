@@ -4,8 +4,10 @@ import { Container, Row, Col, Badge, Card, Spinner, Button } from 'react-bootstr
 import { Link } from 'react-router-dom';
 
 const OrderHistory = () => {
+  const trackingSteps = ["PENDING", "PROCESSING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"];
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reviewOrderId, setReviewOrderId] = useState(null);
 
   useEffect(() => {
     axios.get('/orders/user')
@@ -57,7 +59,7 @@ const OrderHistory = () => {
                     <div>
                       <div style={{ fontSize: '10px' }}>Total</div>
                       <div className="text-dark">
-                        {navigator.language.includes('IN') ? '₹' : '$'}{order.totalAmount}
+                        {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(Number(order.totalAmount || 0))}
                       </div>
                     </div>
                     <div>
@@ -90,11 +92,44 @@ const OrderHistory = () => {
                     
                     <Col md={4} className="text-md-end mt-3 mt-md-0 d-flex flex-column gap-2">
                       <div className="small text-start p-3 bg-light" aria-label="Delivery tracking progress">
-                        <strong>Tracking</strong><div className="d-flex flex-wrap gap-2 mt-2">{["PENDING", "PROCESSING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"].map((step, index, steps) => <span key={step} className={`badge ${steps.indexOf(order.status?.toUpperCase()) >= index ? 'bg-success' : 'bg-secondary'}`}>{step.replaceAll("_", " ")}</span>)}</div>
+                        <strong>Tracking</strong>
+                        <div className="d-flex flex-wrap align-items-center gap-2 mt-2" aria-label={`Order progress: ${trackingSteps.map(step => step.replaceAll("_", " ")).join(" then ")}`}>
+                          {trackingSteps.map((step, index) => (
+                            <React.Fragment key={step}>
+                              <span className={`badge ${trackingSteps.indexOf(order.status?.toUpperCase()) >= index ? "bg-success" : "bg-secondary"}`}>
+                                {step.replaceAll("_", " ")}
+                              </span>
+                              {index < trackingSteps.length - 1 && <span className="text-muted fw-bold" aria-hidden="true">→</span>}
+                            </React.Fragment>
+                          ))}
+                        </div>
                       </div>
-                      <Button variant="outline-dark" className="w-100 fw-bold rounded-pill shadow-sm">
+                      <Button
+                        variant="outline-dark"
+                        className="w-100 fw-bold rounded-pill shadow-sm"
+                        disabled={order.status?.toUpperCase() !== "DELIVERED"}
+                        aria-expanded={reviewOrderId === order.id}
+                        onClick={() => setReviewOrderId(current => current === order.id ? null : order.id)}
+                      >
                         Write a product review
                       </Button>
+                      {reviewOrderId === order.id && (
+                        <div className="border rounded p-2 text-start" aria-label="Choose a product to review">
+                          <div className="small fw-bold mb-2">Choose a product from this order:</div>
+                          {order.orderItems?.filter(item => item.product?.id).map(item => (
+                            <Link
+                              key={item.id}
+                              to={`/product/${item.product.id}#reviews`}
+                              className="d-block small py-1"
+                            >
+                              {item.product.name || "Product"} — Write review
+                            </Link>
+                          ))}
+                          {!order.orderItems?.some(item => item.product?.id) && (
+                            <span className="small text-muted">No products are available for review in this order.</span>
+                          )}
+                        </div>
+                      )}
                       <Link to={`/support?orderId=${order.id}`} className="btn btn-outline-secondary w-100 fw-bold rounded-pill">Contact support / report a problem</Link>
                     </Col>
                   </Row>

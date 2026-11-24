@@ -6,6 +6,7 @@ import axios from '../axios';
 import PaymentForm from './PaymentForm';
 import unplugged from "../assets/unplugged.png";
 import { getDiscountPercentage, getSalePrice } from "../utils/pricing";
+import { getImageUrl } from "../utils/imageUrl";
 
 const stripePromise = loadStripe('pk_test_51TSWaI2OVQWK9oI9tI1U8cesyrjqJJftRr0Iwh44BBhZJyVTLQdKwxLdF0RNa5m9YizAt3e5vWhjFpPbF60qZL0U00NfncpOp4');
 const emptyAddress = { name: '', phone: '', line1: '', line2: '', city: '', state: '', postal_code: '', country: 'India' };
@@ -63,7 +64,7 @@ const CheckoutPopup = ({ show, handleClose, cartItems, totalPrice, handleCheckou
           <div className="col-md-5 border-end border-dark p-4 bg-light">
             <h6 className="fw-black text-uppercase small mb-4">Order Summary</h6>
             <div style={{ maxHeight: 250, overflowY: 'auto' }}>{cartItems.map(item => {
-              const image = item.imageUrl || unplugged;
+              const image = getImageUrl(item.imageUrl) || unplugged;
               return <div key={item.id} className="d-flex align-items-center mb-3 pb-3 border-bottom"><img src={image} alt={item.name} className="bg-white border me-3 p-1" style={{ width: 55, height: 55, objectFit: 'contain' }} /><div className="flex-grow-1"><div className="small fw-bold text-uppercase">{item.name}</div><small>Qty: {item.quantity || 1}{getDiscountPercentage(item) > 0 && ` · ${getDiscountPercentage(item)}% off`}</small></div><strong>₹{(getSalePrice(item) * (item.quantity || 1)).toFixed(2)}</strong></div>;
             })}</div>
             <div className="mt-3 pt-3 border-top border-dark d-flex justify-content-between fw-bold"><span>Total</span><span>₹{totalPrice.toFixed(2)}</span></div>

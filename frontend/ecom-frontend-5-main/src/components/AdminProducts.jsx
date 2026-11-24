@@ -3,6 +3,7 @@ import AppContext from "../Context/Context";
 import { Link } from "react-router-dom";
 import unplugged from "../assets/unplugged.png";
 import { Table, Badge } from 'react-bootstrap';
+import { getImageUrl } from "../utils/imageUrl";
 
 const AdminProducts = () => {
     const { data, deleteProduct } = useContext(AppContext);
@@ -117,7 +118,7 @@ const AdminProducts = () => {
                                     <div className="d-flex align-items-center py-2">
                                         <div className="border border-dark p-1 me-3 bg-light">
                                             <img 
-                                                src={product.imageUrl || unplugged}
+                                                src={getImageUrl(product.imageUrl) || unplugged}
                                                 alt={product.name} 
                                                 style={{ width: '50px', height: '50px', objectFit: 'contain' }} 
                                             />
