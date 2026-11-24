@@ -10,7 +10,7 @@ import { getImageUrl } from "../utils/imageUrl";
 
 const Product = () => {
   const { id } = useParams();
-  const { addToCart, data, cart } = useContext(AppContext);
+  const { addToCart, data, cart, notify } = useContext(AppContext);
   const [product, setProduct] = useState(null);
   const [mainImageUrl, setMainImageUrl] = useState("");
   const [gallery, setGallery] = useState([]); 
@@ -19,6 +19,8 @@ const Product = () => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [reviewMessage, setReviewMessage] = useState("");
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlistBusy, setWishlistBusy] = useState(false);
   const currentUser = AuthService.getCurrentUser();
   const currentUserId = currentUser?.id ?? currentUser?.userId;
   const isAdmin = currentUser?.roles?.includes("ROLE_ADMIN");
@@ -55,6 +57,31 @@ const Product = () => {
   }, [id]);
 
   useEffect(() => {
+    if (!product?.id) return;
+    const user = AuthService.getCurrentUser();
+    if (!user?.accessToken && !user?.token && !user?.jwt) return;
+
+    const pendingProductId = sessionStorage.getItem("klyro-pending-wishlist-product");
+    if (pendingProductId === String(product.id)) {
+      sessionStorage.removeItem("klyro-pending-wishlist-product");
+      API.post(`/wishlist/add/${product.id}`)
+        .then(() => {
+          setIsWishlisted(true);
+          notify("Added to your wishlist");
+        })
+        .catch(() => notify("Could not add this item to your wishlist.", "error"));
+      return;
+    }
+
+    API.get("/wishlist")
+      .then(response => {
+        const items = Array.isArray(response.data) ? response.data : [];
+        setIsWishlisted(items.some(item => String(item.id) === String(product.id)));
+      })
+      .catch(() => {});
+  }, [product?.id]);
+
+  useEffect(() => {
     if (!loading && window.location.hash === "#reviews") {
       window.requestAnimationFrame(() => {
         document.getElementById("product-reviews")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -72,6 +99,53 @@ const Product = () => {
       setReviewMessage("Your review has been added.");
     } catch (error) {
       setReviewMessage(error.response?.status === 401 ? "Sign in to leave a review." : (error.response?.data || "Could not submit your review."));
+    }
+  };
+
+  const toggleWishlist = async () => {
+    const user = AuthService.getCurrentUser();
+    if (!user?.accessToken && !user?.token && !user?.jwt) {
+      sessionStorage.setItem("klyro-pending-wishlist-product", String(product.id));
+      window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+
+    setWishlistBusy(true);
+    try {
+      if (isWishlisted) {
+        await API.delete(`/wishlist/remove/${product.id}`);
+        setIsWishlisted(false);
+        notify("Removed from your wishlist");
+      } else {
+        await API.post(`/wishlist/add/${product.id}`);
+        setIsWishlisted(true);
+        notify("Added to your wishlist");
+      }
+    } catch {
+      notify("Could not update your wishlist. Please try again.", "error");
+    } finally {
+      setWishlistBusy(false);
+    }
+  };
+
+  const shareProduct = async () => {
+    const shareData = {
+      title: product.name,
+      text: `Check out ${product.name}`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareData.url);
+        notify("Product link copied");
+      } else {
+        window.prompt("Copy this product link:", shareData.url);
+      }
+    } catch (error) {
+      if (error.name !== "AbortError") notify("Could not share this product.", "error");
     }
   };
 
@@ -146,7 +220,19 @@ const Product = () => {
 
           {/* MAIN IMAGE DISPLAY */}
           <Col lg={6} md={10} className="text-center">
-            <div className="product-image-stage p-4 bg-light mb-4 shadow-none border-0" style={{ minHeight: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="product-image-stage position-relative p-4 bg-light mb-4 shadow-none border-0" style={{ minHeight: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Button
+                type="button"
+                variant="light"
+                className={`product-detail-wishlist position-absolute top-0 end-0 m-3 shadow-sm ${isWishlisted ? "is-wishlisted" : ""}`}
+                disabled={wishlistBusy}
+                aria-pressed={isWishlisted}
+                aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                title={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                onClick={toggleWishlist}
+              >
+                <i className={`bi ${isWishlisted ? "bi-heart-fill" : "bi-heart"}`} aria-hidden="true" />
+              </Button>
               <img 
                 src={mainImageUrl} 
                 alt={product.name} 
@@ -181,7 +267,19 @@ const Product = () => {
               <div className="mb-2">
                 <span className="text-uppercase fw-bold text-muted small" style={{ letterSpacing: '2px' }}>{product.brand}</span>
               </div>
-              <h1 className="h2 fw-black text-uppercase text-dark mb-3" style={{ fontFamily: "'Oswald', sans-serif", letterSpacing: '0.5px' }}>{product.name}</h1>
+              <div className="d-flex align-items-start gap-3 mb-3">
+                <h1 className="h2 fw-black text-uppercase text-dark mb-0 flex-grow-1" style={{ fontFamily: "'Oswald', sans-serif", letterSpacing: '0.5px' }}>{product.name}</h1>
+                <Button
+                  type="button"
+                  variant="light"
+                  className="product-share-button flex-shrink-0 shadow-sm"
+                  aria-label="Share product link"
+                  title="Share product"
+                  onClick={shareProduct}
+                >
+                  <i className="bi bi-share" aria-hidden="true" />
+                </Button>
+              </div>
               
               <div className="price-section mb-4">
                 <div className="d-flex align-items-center gap-3">
@@ -291,6 +389,13 @@ const Product = () => {
         .transition-all { transition: all 0.2s ease-in-out; }
         .uppercase { text-transform: uppercase; }
         .Oswald-font { font-family: 'Oswald', sans-serif; }
+        .product-detail-wishlist { width: 46px; height: 46px; z-index: 2; border: 0; border-radius: 50%; color: #111; font-size: 1.25rem; }
+        .product-detail-wishlist:hover { color: #dc3545; }
+        .product-detail-wishlist.is-wishlisted { color: #dc3545; }
+        .product-detail-wishlist:focus-visible { outline: 3px solid #111; outline-offset: 2px; }
+        .product-share-button { width: 42px; height: 42px; padding: 0; border: 0; border-radius: 50%; color: #111; font-size: 1.1rem; }
+        .product-share-button:hover { background: #e9ecef; }
+        .product-share-button:focus-visible { outline: 3px solid #111; outline-offset: 2px; }
         @media (max-width: 768px) {
           .product-page-wrapper { padding-top: 16px !important; }
         }

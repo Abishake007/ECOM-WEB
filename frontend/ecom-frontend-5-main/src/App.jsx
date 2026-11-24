@@ -1,6 +1,6 @@
 import "./App.css";
-import React, { useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React, { useLayoutEffect, useState } from "react";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
@@ -25,6 +25,16 @@ import ResetPassword from "./components/ResetPassword";
 import AdminRoute from "./components/AdminRoute";
 import Support from "./components/Support";
 
+function ScrollToTop() {
+  const { pathname, hash } = useLocation();
+
+  useLayoutEffect(() => {
+    if (!hash) window.scrollTo(0, 0);
+  }, [pathname, hash]);
+
+  return null;
+}
+
 function App() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,6 +50,7 @@ function App() {
     v7_relativeSplatPath: true 
   }}
 >
+      <ScrollToTop />
       <Navbar onSelectCategory={handleCategorySelect} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
       <Routes>
         <Route path="/" element={<Home selectedCategory={selectedCategory} onSelectCategory={handleCategorySelect} onClearCategory={() => setSelectedCategory("")} searchText={searchQuery} onSearchChange={setSearchQuery} />} />
