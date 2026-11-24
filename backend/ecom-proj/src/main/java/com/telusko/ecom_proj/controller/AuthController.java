@@ -64,7 +64,7 @@ public class AuthController {
     UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();    
     userRepository.findById(userDetails.getId()).ifPresent(user -> {
       if (user.getWelcomeEmailSent() == 0
-          && emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), frontendUrl + "/login")) {
+          && emailService.sendWelcomeEmail(user.getEmail(), user.getUsername())) {
         user.setWelcomeEmailSent(1);
         userRepository.save(user);
       }

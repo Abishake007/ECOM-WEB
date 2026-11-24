@@ -28,6 +28,9 @@ public class EmailService {
     @Value("${ADMIN_NOTIFICATION_EMAIL:}")
     private String adminNotificationEmail;
 
+    @Value("${ecom.app.frontendUrl:http://localhost:5173}")
+    private String frontendUrl;
+
     public void sendOrderConfirmationEmail(Order order) {
         if (order.getUser() == null || order.getUser().getEmail() == null) return;
         StringBuilder items = new StringBuilder("<table><tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Line total</th></tr>");
@@ -66,10 +69,39 @@ public class EmailService {
         send(email, "Reset your KLYRO password", html);
     }
 
-    public boolean sendWelcomeEmail(String email, String username, String loginUrl) {
-        String html = "<h1>Welcome to KLYRO, " + escapeHtml(username) + "!</h1>"
-                + "<p>Your account is ready. Sign in any time to explore products, save favorites, and track orders.</p>"
-                + "<p><a href=\"" + escapeHtml(loginUrl) + "\">Sign in to KLYRO</a></p>";
+    public boolean sendWelcomeEmail(String email, String username) {
+        String configuredFrontendUrl = frontendUrl;
+        if (configuredFrontendUrl == null || configuredFrontendUrl.isBlank() || configuredFrontendUrl.contains("localhost")) {
+            configuredFrontendUrl = "https://ecom-web-vert.vercel.app";
+        }
+        String shopUrl = configuredFrontendUrl.replaceAll("/+$", "");
+        String imageUrl = shopUrl + "/banner.png";
+        String safeShopUrl = escapeHtml(shopUrl);
+        String html = "<div style=\"margin:0;padding:32px 12px;background:#f1f1f1;font-family:Arial,Helvetica,sans-serif;color:#171717;\">"
+                + "<div style=\"max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e5e5e5;\">"
+                + "<div style=\"padding:22px 28px;background:#171717;color:#ffffff;font-size:26px;font-weight:800;letter-spacing:2px;\">KLYRO</div>"
+                + "<img src=\"" + escapeHtml(imageUrl) + "\" alt=\"Discover the latest at KLYRO\" width=\"600\" style=\"display:block;width:100%;max-width:600px;height:auto;border:0;\">"
+                + "<div style=\"padding:30px 28px 34px;line-height:1.65;\">"
+                + "<p style=\"margin:0 0 18px;\">Hi " + escapeHtml(username) + ",</p>"
+                + "<h1 style=\"margin:0 0 14px;font-size:28px;line-height:1.2;\">Welcome to KLYRO!</h1>"
+                + "<p>We're excited to have you here!</p>"
+                + "<p>Thank you for joining KLYRO. You've just unlocked a better way to discover products, explore new collections, and enjoy a seamless shopping experience.</p>"
+                + "<p>Whether you're looking for everyday essentials or something special, we've got something for you.</p>"
+                + "<p style=\"margin-bottom:8px;font-weight:700;\">Here's what you can look forward to:</p>"
+                + "<ul style=\"padding-left:22px;margin-top:8px;\">"
+                + "<li>Explore a wide range of products.</li>"
+                + "<li>Discover exciting collections and new arrivals.</li>"
+                + "<li>Save your favourite products.</li>"
+                + "<li>Enjoy a smooth and convenient shopping experience.</li>"
+                + "</ul>"
+                + "<p>Your shopping journey starts now!</p>"
+                + "<p style=\"margin:26px 0 10px;font-weight:700;\">Ready to explore?</p>"
+                + "<p>Visit KLYRO and discover something you love.</p>"
+                + "<p style=\"margin:26px 0 30px;text-align:center;\"><a href=\"" + safeShopUrl + "\" style=\"display:inline-block;padding:14px 34px;background:#171717;color:#ffffff;text-decoration:none;font-weight:700;letter-spacing:1px;\">SHOP NOW</a></p>"
+                + "<p>Thank you for choosing us!</p>"
+                + "<p style=\"margin-bottom:0;\">Best regards,<br><strong>Team KLYRO</strong><br><em>Shop Smart. Live Better.</em></p>"
+                + "</div><div style=\"padding:18px 28px;background:#f7f7f7;color:#777777;font-size:12px;text-align:center;\">© 2026 KLYRO. All rights reserved.</div>"
+                + "</div></div>";
         return send(email, "Welcome to KLYRO", html);
     }
 
